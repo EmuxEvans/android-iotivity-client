@@ -53,6 +53,9 @@ public class MainActivity extends AppCompatActivity implements
     private Map<OcResourceIdentifier, OcResource> mFoundResources = new HashMap<>();
     private OcResource mSensorResourceA = null;
     private OcResource mLedResourceA = null;
+    private OcResource mLcdResourceA = null;
+    private OcResource mBuzzerResourceA = null;
+    private OcResource mButtonResourceA = null;
     private DemoResource mDemo = new DemoResource();
 
     private final static String TAG = MainActivity.class.getSimpleName();
@@ -67,14 +70,9 @@ public class MainActivity extends AppCompatActivity implements
     private final static String button_name_button = "(Arduino) Button";
     private final static String button_name_touch = "(Arduino) Touch";
 
-    private static Activity activity;
-
     ArrayList<String> list_item;
     ArrayAdapter<String> list_adapter;
     private int found_devices = 0;
-
-    private final static int DEV_UN_CONTROLLABLE = 0;
-    private final static int DEV_CONTROLLABLE = 1;
 
     private void startDemoClient() {
         Context context = this;
@@ -94,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements
         try {
             String requestUri;
 
-            msg("Finding all resources of type \"grove.sensor\".");
+            msg("Finding resources of type \"grove.sensor\".");
             requestUri = OcPlatform.WELL_KNOWN_QUERY + "?rt=grove.sensor";
             OcPlatform.findResource("",
                     requestUri,
@@ -102,8 +100,32 @@ public class MainActivity extends AppCompatActivity implements
                     this
             );
 
-            msg("Finding all resources of type \"grove.led\".");
+            msg("Finding resources of type \"grove.led\".");
             requestUri = OcPlatform.WELL_KNOWN_QUERY + "?rt=grove.led";
+            OcPlatform.findResource("",
+                    requestUri,
+                    EnumSet.of(OcConnectivityType.CT_DEFAULT),
+                    this
+            );
+
+            msg("Finding resources of type \"grove.lcd\".");
+            requestUri = OcPlatform.WELL_KNOWN_QUERY + "?rt=grove.lcd";
+            OcPlatform.findResource("",
+                    requestUri,
+                    EnumSet.of(OcConnectivityType.CT_DEFAULT),
+                    this
+            );
+
+            msg("Finding resources of type \"grove.buzzer\".");
+            requestUri = OcPlatform.WELL_KNOWN_QUERY + "?rt=grove.buzzer";
+            OcPlatform.findResource("",
+                    requestUri,
+                    EnumSet.of(OcConnectivityType.CT_DEFAULT),
+                    this
+            );
+
+            msg("Finding resources of type \"grove.button\".");
+            requestUri = OcPlatform.WELL_KNOWN_QUERY + "?rt=grove.button";
             OcPlatform.findResource("",
                     requestUri,
                     EnumSet.of(OcConnectivityType.CT_DEFAULT),
@@ -212,6 +234,72 @@ public class MainActivity extends AppCompatActivity implements
             // Call a local method which will internally invoke "get" API on the SensorResource
             getLedResourceRepresentation();
         }
+
+        if (resourceUri.equals("/grove/lcd")) {
+            if (mLedResourceA != null) {
+                msg("Found another LCD resource (Arduino), ignoring");
+                return;
+            }
+
+            //Assign resource reference to a global variable to keep it from being
+            //destroyed by the GC when it is out of scope.
+            mLcdResourceA = ocResource;
+
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    add_device();
+                    mDemo.setLcdIndex(found_devices++);
+                    list_item.set(mDemo.getLcdIndex(), lcd_name);
+                    list_adapter.notifyDataSetChanged();
+                }
+            });
+        }
+
+        if (resourceUri.equals("/grove/buzzer")) {
+            if (mBuzzerResourceA != null) {
+                msg("Found another buzzer resource (Arduino), ignoring");
+                return;
+            }
+
+            //Assign resource reference to a global variable to keep it from being
+            //destroyed by the GC when it is out of scope.
+            mBuzzerResourceA = ocResource;
+
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    add_device();
+                    mDemo.setBuzzerIndex(found_devices++);
+                    list_item.set(mDemo.getBuzzerIndex(), buzzer_name);
+                    list_adapter.notifyDataSetChanged();
+                }
+            });
+        }
+
+        if (resourceUri.equals("/grove/button")) {
+            if (mLedResourceA != null) {
+                msg("Found another button resource (Arduino), ignoring");
+                return;
+            }
+
+            //Assign resource reference to a global variable to keep it from being
+            //destroyed by the GC when it is out of scope.
+            mButtonResourceA = ocResource;
+
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    add_device();
+                    mDemo.setButtonIndex(found_devices++);
+                    list_item.set(mDemo.getButtonIndex(), button_name_button);
+                    add_device();
+                    mDemo.setTouchIndex(found_devices++);
+                    list_item.set(mDemo.getTouchIndex(), button_name_touch);
+                    list_adapter.notifyDataSetChanged();
+                }
+            });
+
+            // Call a local method which will internally invoke "get" API on the SensorResource
+            getButtonResourceRepresentation();
+        }
     }
 
     /**
@@ -247,6 +335,21 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    private void getButtonResourceRepresentation() {
+        msg("Getting Button Representation...");
+
+        Map<String, String> queryParams = new HashMap<>();
+        try {
+            // Invoke resource's "get" API with a OcResource.OnGetListener event
+            // listener implementation
+            sleep(1);
+            mButtonResourceA.get(queryParams, this);
+        } catch (OcException e) {
+            Log.e(TAG, e.toString());
+            msg("Error occurred while invoking \"get\" API");
+        }
+    }
+
     /**
      * An event handler to be executed whenever a "get" request completes successfully
      *
@@ -262,7 +365,8 @@ public class MainActivity extends AppCompatActivity implements
         if (ocRepresentation.getUri().equals("/grove/sensor")) {
             msg("Sensor attributes: ");
             try {
-                mDemo.sensorSetOcRepresentation(ocRepresentation);
+                mDemo.sensorGetOcRepresentation(ocRepresentation);
+
                 msg(String.valueOf(mDemo.getTemp()));
                 msg(String.valueOf(mDemo.getLight()));
                 msg(String.valueOf(mDemo.getSound()));
@@ -277,13 +381,13 @@ public class MainActivity extends AppCompatActivity implements
                 });
             } catch (OcException e) {
                 Log.e(TAG, e.toString());
-                msg("Failed to read the attributes of a light resource");
+                msg("Failed to read the attributes of a sensor resource");
             }
 
         } else if(ocRepresentation.getUri().equals("/grove/led")) {
             try {
                 //Read attribute values into local representation of a LED
-                mDemo.ledSetOcRepresentation(ocRepresentation);
+                mDemo.ledGetOcRepresentation(ocRepresentation);
                 msg(String.valueOf(mDemo.getSound()));
 
                 runOnUiThread(new Runnable() {
@@ -296,7 +400,26 @@ public class MainActivity extends AppCompatActivity implements
                 //putLedRepresentation();
             } catch (OcException e) {
                 Log.e(TAG, e.toString());
-                msg("Failed to read the attributes of a light resource");
+                msg("Failed to read the attributes of a LED resource");
+            }
+        } else if(ocRepresentation.getUri().equals("/grove/button")) {
+            try {
+                //Read attribute values into local representation of a LED
+                mDemo.buttonGetOcRepresentation(ocRepresentation);
+                msg(String.valueOf(mDemo.getButton()));
+
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        list_item.set(mDemo.getButtonIndex(), button_name_button + ": " + String.valueOf(mDemo.getButton()));
+                        list_item.set(mDemo.getTouchIndex(), button_name_touch + ": " + String.valueOf(mDemo.getTouch()));
+                        list_adapter.notifyDataSetChanged();
+                    }
+                });
+                //Call a local method which will internally invoke put API on the foundLightResource
+                //putLedRepresentation();
+            } catch (OcException e) {
+                Log.e(TAG, e.toString());
+                msg("Failed to read the attributes of a button resource");
             }
         }
 
@@ -327,10 +450,10 @@ public class MainActivity extends AppCompatActivity implements
         msg("Putting LED representation...");
         OcRepresentation representation = null;
         try {
-            representation = mDemo.ledGetOcRepresentation();
+            representation = mDemo.ledSetOcRepresentation();
         } catch (OcException e) {
             Log.e(TAG, e.toString());
-            msg("Failed to get OcRepresentation from LED");
+            msg("Failed to set OcRepresentation from LED");
         }
 
         Map<String, String> queryParams = new HashMap<>();
@@ -346,6 +469,51 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    private void putLcdRepresentation() {
+        msg("Putting LCD representation...");
+        OcRepresentation representation = null;
+        try {
+            representation = mDemo.lcdSetOcRepresentation();
+        } catch (OcException e) {
+            Log.e(TAG, e.toString());
+            msg("Failed to set OcRepresentation from LCD");
+        }
+
+        Map<String, String> queryParams = new HashMap<>();
+
+        try {
+            sleep(1);
+            // Invoke resource's "put" API with a new representation, query parameters and
+            // OcResource.OnPutListener event listener implementation
+            mLcdResourceA.put(representation, queryParams, this);
+        } catch (OcException e) {
+            Log.e(TAG, e.toString());
+            msg("Error occurred while invoking \"put\" API");
+        }
+    }
+
+    private void putBuzzerRepresentation() {
+        msg("Putting buzzer representation...");
+        OcRepresentation representation = null;
+        try {
+            representation = mDemo.buzzerSetOcRepresentation();
+        } catch (OcException e) {
+            Log.e(TAG, e.toString());
+            msg("Failed to set OcRepresentation from buzzer");
+        }
+
+        Map<String, String> queryParams = new HashMap<>();
+
+        try {
+            sleep(1);
+            // Invoke resource's "put" API with a new representation, query parameters and
+            // OcResource.OnPutListener event listener implementation
+            mBuzzerResourceA.put(representation, queryParams, this);
+        } catch (OcException e) {
+            Log.e(TAG, e.toString());
+            msg("Error occurred while invoking \"put\" API");
+        }
+    }
     /**
      * An event handler to be executed whenever a "put" request completes successfully
      *
@@ -356,13 +524,20 @@ public class MainActivity extends AppCompatActivity implements
     public synchronized void onPutCompleted(List<OcHeaderOption> list, OcRepresentation ocRepresentation) {
         msg("PUT request was successful");
         try {
-            mDemo.sensorSetOcRepresentation(ocRepresentation);
+            mDemo.sensorGetOcRepresentation(ocRepresentation);
         } catch (OcException e) {
             Log.e(TAG, e.toString());
-            msg("Failed to create Light representation");
+            msg("Failed to create sensor representation");
         }
-        msg("Sensor attributes: ");
-        msg(String.valueOf(mDemo.getTemp()));
+
+        if(ocRepresentation.getUri().equals("/grove/led")) {
+            msg("LED status: ");
+            msg(String.valueOf(mDemo.getLed()));
+        } else if(ocRepresentation.getUri().equals("/grove/lcd")) {
+            msg("LCD string: ");
+            msg(mDemo.getLcd());
+        }
+
         printLine();
 
         //Call a local method which will internally invoke post API on the foundLightResource
@@ -397,7 +572,7 @@ public class MainActivity extends AppCompatActivity implements
         msg("Posting light representation...");
         OcRepresentation representation = null;
         try {
-            representation = mDemo.sensorGetOcRepresentation();
+            representation = mDemo.sensorSetOcRepresentation();
         } catch (OcException e) {
             Log.e(TAG, e.toString());
             msg("Failed to get OcRepresentation from a light");
@@ -430,7 +605,7 @@ public class MainActivity extends AppCompatActivity implements
                 msg("\tUri of the created resource: " +
                         ocRepresentation.getValue(OcResource.CREATED_URI_KEY));
             } else {
-                mDemo.sensorSetOcRepresentation(ocRepresentation);
+                mDemo.sensorGetOcRepresentation(ocRepresentation);
                 //msg(mDemo.toString());
             }
         } catch (OcException e) {
@@ -443,7 +618,7 @@ public class MainActivity extends AppCompatActivity implements
         msg("Posting again light representation...");
         OcRepresentation representation2 = null;
         try {
-            representation2 = mDemo.sensorGetOcRepresentation();
+            representation2 = mDemo.sensorSetOcRepresentation();
         } catch (OcException e) {
             Log.e(TAG, e.toString());
             msg("Failed to get OcRepresentation from a light");
@@ -495,7 +670,7 @@ public class MainActivity extends AppCompatActivity implements
                     msg("\tUri of the created resource: " +
                             ocRepresentation.getValue(OcResource.CREATED_URI_KEY));
                 } else {
-                    mDemo.sensorSetOcRepresentation(ocRepresentation);
+                    mDemo.sensorGetOcRepresentation(ocRepresentation);
                     msg(mDemo.toString());
                 }
             } catch (OcException e) {
@@ -564,7 +739,7 @@ public class MainActivity extends AppCompatActivity implements
         msg("OBSERVE Result:");
         msg("\tSequenceNumber:" + sequenceNumber);
         try {
-            mDemo.sensorSetOcRepresentation(ocRepresentation);
+            mDemo.sensorGetOcRepresentation(ocRepresentation);
         } catch (OcException e) {
             Log.e(TAG, e.toString());
             msg("Failed to get the attribute values");
@@ -630,6 +805,10 @@ public class MainActivity extends AppCompatActivity implements
 
     private synchronized void resetGlobals() {
         mSensorResourceA = null;
+        mLedResourceA = null;
+        mLcdResourceA = null;
+        mBuzzerResourceA = null;
+        mButtonResourceA = null;
         mFoundResources.clear();
         mDemo = new DemoResource();
         mObserveCount = 0;
@@ -654,72 +833,39 @@ public class MainActivity extends AppCompatActivity implements
 
         ListView listview = (ListView)findViewById(R.id.listView);
 
-        listview.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView parent, View view, int position, long id){
-                Intent intent = new Intent();
-                Bundle bundle = new Bundle();
-
-                if(id < found_devices) {
-                    if(id == mDemo.getLedIndex()) {
-                        LedControl led_dialog = new LedControl(activity);
+            public void onItemClick(AdapterView parent, View view, int position, long id) {
+                if (id < found_devices) {
+                    if (id == 0) {//mDemo.getLedIndex()) {
+                        LedControl led_dialog = new LedControl(MainActivity.this);
                         led_dialog.show();
                         msg("Progress: " + String.valueOf(led_dialog.get_progress()));
                         try {
-                            OcRepresentation rep = new OcRepresentation();
-                            rep.setValue("status", led_dialog.get_progress());
-
-                            Map<String, String> queryParams = new HashMap<>();
-                            sleep(1);
-                            // Invoke resource's "put" API with a new representation, query parameters and
-                            // OcResource.OnPutListener event listener implementation
-                            mLedResourceA.put(rep, queryParams, activity);
-
+                            OcRepresentation rep = mDemo.ledSetOcRepresentation();
+                            rep.setValue(mDemo.LED_STATUS_KEY, led_dialog.get_progress());
+                            putLedRepresentation();
                         } catch (OcException e) {
-
+                            Log.e(TAG, e.toString());
+                            msg("Failed to put LED status");
                         }
-
+                    } else if (id == 1) {//mDemo.getLcdIndex()) {
+                        LcdControl lcd_dialog = new LcdControl(MainActivity.this);
+                        lcd_dialog.show();
+                        msg("LCD string: " + lcd_dialog.get_string());
+                        try {
+                            OcRepresentation rep = mDemo.lcdSetOcRepresentation();
+                            rep.setValue(mDemo.LCD_KEY, lcd_dialog.get_string());
+                            putLcdRepresentation();
+                        } catch (OcException e) {
+                            Log.e(TAG, e.toString());
+                            msg("Failed to put LCD status");
+                        }
 
                     }
                 } else {
                     msg("Out of range");
                 }
-                /*
-                switch((int) id) {
-                    case 0:
-                        intent.setClass(MainActivity.this, Overview.class);
-                        break;
-
-                    case 1:
-                        intent.setClass(MainActivity.this, Newincome.class);
-                        break;
-
-                    case 2:
-                        intent.setClass(MainActivity.this, Newoutgoing.class);
-                        break;
-
-                    case 3:
-                        intent.setClass(MainActivity.this, Detail.class);
-                        bundle.putInt("select", Detail.DETAIL_INCOME_MOD_DEL);
-                        intent.putExtras(bundle);
-                        break;
-
-                    case 4:
-                        intent.setClass(MainActivity.this, Detail.class);
-                        bundle.putInt("select", Detail.DETAIL_OUTGOING_MOD_DEL);
-                        intent.putExtras(bundle);
-                        break;
-
-                    case 5:
-                        intent.setClass(MainActivity.this, Settings.class);
-                        break;
-
-                    default:
-                        return;
-                }
-
-                startActivity(intent);
-                */
             }
         });
 
@@ -730,7 +876,6 @@ public class MainActivity extends AppCompatActivity implements
                 android.R.layout.simple_list_item_1,
                 list_item);
         listview.setAdapter(list_adapter);
-
 
 
         if (null == savedInstanceState) {
@@ -750,8 +895,6 @@ public class MainActivity extends AppCompatActivity implements
             String consoleOutput = savedInstanceState.getString("consoleOutputString");
             mConsoleTextView.setText(consoleOutput);
         }
-
-
 
     }
 
