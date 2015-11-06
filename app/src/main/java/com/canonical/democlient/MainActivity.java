@@ -1,7 +1,9 @@
 package com.canonical.democlient;
 
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -12,6 +14,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -49,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private Map<OcResourceIdentifier, OcResource> mFoundResources = new HashMap<>();
     private OcResource mSensorResourceA = null;
+    private OcResource mLedResourceA = null;
     private DemoResource mDemo = new DemoResource();
 
     private final static String TAG = MainActivity.class.getSimpleName();
@@ -62,6 +66,8 @@ public class MainActivity extends AppCompatActivity implements
     private final static String buzzer_name = "(Arduino) Buzzer";
     private final static String button_name_button = "(Arduino) Button";
     private final static String button_name_touch = "(Arduino) Touch";
+
+    private static Activity activity;
 
     ArrayList<String> list_item;
     ArrayAdapter<String> list_adapter;
@@ -86,8 +92,18 @@ public class MainActivity extends AppCompatActivity implements
         OcPlatform.Configure(platformConfig);
 
         try {
+            String requestUri;
+
             msg("Finding all resources of type \"grove.sensor\".");
-            String requestUri = OcPlatform.WELL_KNOWN_QUERY + "?rt=grove.sensor";
+            requestUri = OcPlatform.WELL_KNOWN_QUERY + "?rt=grove.sensor";
+            OcPlatform.findResource("",
+                    requestUri,
+                    EnumSet.of(OcConnectivityType.CT_DEFAULT),
+                    this
+            );
+
+            msg("Finding all resources of type \"grove.led\".");
+            requestUri = OcPlatform.WELL_KNOWN_QUERY + "?rt=grove.led";
             OcPlatform.findResource("",
                     requestUri,
                     EnumSet.of(OcConnectivityType.CT_DEFAULT),
@@ -158,17 +174,43 @@ public class MainActivity extends AppCompatActivity implements
             //destroyed by the GC when it is out of scope.
             mSensorResourceA = ocResource;
 
-            add_device();
-            mDemo.setTempIndex(found_devices++);
-            add_device();
-            mDemo.setLightIndex(found_devices++);
-            add_device();
-            mDemo.setSoundIndex(found_devices++);
-            //((BaseAdapter)((ListView)findViewById(R.id.listView)).getAdapter()).notifyDataSetChanged();
-
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    add_device();
+                    mDemo.setTempIndex(found_devices++);
+                    add_device();
+                    mDemo.setLightIndex(found_devices++);
+                    add_device();
+                    mDemo.setSoundIndex(found_devices++);
+                    list_adapter.notifyDataSetChanged();
+                }
+            });
 
             // Call a local method which will internally invoke "get" API on the SensorResource
             getSensorResourceRepresentation();
+        }
+
+        if (resourceUri.equals("/grove/led")) {
+            if (mLedResourceA != null) {
+                msg("Found another LED resource (Arduino), ignoring");
+                return;
+            }
+
+            //Assign resource reference to a global variable to keep it from being
+            //destroyed by the GC when it is out of scope.
+            mLedResourceA = ocResource;
+
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    add_device();
+                    mDemo.setLedIndex(found_devices++);
+                    list_item.set(mDemo.getLedIndex(), led_name);
+                    list_adapter.notifyDataSetChanged();
+                }
+            });
+
+            // Call a local method which will internally invoke "get" API on the SensorResource
+            getLedResourceRepresentation();
         }
     }
 
@@ -190,6 +232,21 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    private void getLedResourceRepresentation() {
+        msg("Getting LED Representation...");
+
+        Map<String, String> queryParams = new HashMap<>();
+        try {
+            // Invoke resource's "get" API with a OcResource.OnGetListener event
+            // listener implementation
+            sleep(1);
+            mLedResourceA.get(queryParams, this);
+        } catch (OcException e) {
+            Log.e(TAG, e.toString());
+            msg("Error occurred while invoking \"get\" API");
+        }
+    }
+
     /**
      * An event handler to be executed whenever a "get" request completes successfully
      *
@@ -202,29 +259,48 @@ public class MainActivity extends AppCompatActivity implements
         msg("GET request was successful");
         msg("Resource URI: " + ocRepresentation.getUri());
 
-        try {
-            //Read attribute values into local representation of a light
-            mDemo.sensorSetOcRepresentation(ocRepresentation);
-        } catch (OcException e) {
-            Log.e(TAG, e.toString());
-            msg("Failed to read the attributes of a light resource");
+        if (ocRepresentation.getUri().equals("/grove/sensor")) {
+            msg("Sensor attributes: ");
+            try {
+                mDemo.sensorSetOcRepresentation(ocRepresentation);
+                msg(String.valueOf(mDemo.getTemp()));
+                msg(String.valueOf(mDemo.getLight()));
+                msg(String.valueOf(mDemo.getSound()));
+
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        list_item.set(mDemo.getTempIndex(), sensor_name_temp + ": " + String.valueOf(mDemo.getTemp()));
+                        list_item.set(mDemo.getLightIndex(), sensor_name_light + ": " + String.valueOf(mDemo.getLight()));
+                        list_item.set(mDemo.getSoundIndex(), sensor_name_sound + ": " + String.valueOf(mDemo.getSound()));
+                        list_adapter.notifyDataSetChanged();
+                    }
+                });
+            } catch (OcException e) {
+                Log.e(TAG, e.toString());
+                msg("Failed to read the attributes of a light resource");
+            }
+
+        } else if(ocRepresentation.getUri().equals("/grove/led")) {
+            try {
+                //Read attribute values into local representation of a LED
+                mDemo.ledSetOcRepresentation(ocRepresentation);
+                msg(String.valueOf(mDemo.getSound()));
+
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        list_item.set(mDemo.getLedIndex(), led_name + ": " + String.valueOf(mDemo.getLed()));
+                        list_adapter.notifyDataSetChanged();
+                    }
+                });
+                //Call a local method which will internally invoke put API on the foundLightResource
+                //putLedRepresentation();
+            } catch (OcException e) {
+                Log.e(TAG, e.toString());
+                msg("Failed to read the attributes of a light resource");
+            }
         }
-        msg("Sensor attributes: ");
-        msg(String.valueOf(mDemo.getTemp()));
-        msg(String.valueOf(mDemo.getLight()));
-        msg(String.valueOf(mDemo.getSound()));
-        String str = sensor_name_temp + ": " + String.valueOf(mDemo.getTemp());
-        list_item.set(mDemo.getTempIndex(), str);
-        str = sensor_name_light + ": " + String.valueOf(mDemo.getLight());
-        list_item.set(mDemo.getLightIndex(), str);
-        str = sensor_name_sound + ": " + String.valueOf(mDemo.getSound());
-        list_item.set(mDemo.getSoundIndex(), str);
-        ((BaseAdapter) ((ListView)findViewById(R.id.listView)).getAdapter()).notifyDataSetChanged();
 
         printLine();
-
-        //Call a local method which will internally invoke put API on the foundLightResource
-        //putSensorRepresentation();
     }
 
     /**
@@ -247,18 +323,14 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Local method to put a different state for this light resource
      */
-    private void putSensorRepresentation() {
-        //set new values
-        //mDemo.setLed();
-        //mDemo.setPower(15);
-
+    private void putLedRepresentation() {
         msg("Putting LED representation...");
         OcRepresentation representation = null;
         try {
-            representation = mDemo.getOcRepresentation();
+            representation = mDemo.ledGetOcRepresentation();
         } catch (OcException e) {
             Log.e(TAG, e.toString());
-            msg("Failed to get OcRepresentation from sensors");
+            msg("Failed to get OcRepresentation from LED");
         }
 
         Map<String, String> queryParams = new HashMap<>();
@@ -267,7 +339,7 @@ public class MainActivity extends AppCompatActivity implements
             sleep(1);
             // Invoke resource's "put" API with a new representation, query parameters and
             // OcResource.OnPutListener event listener implementation
-            mSensorResourceA.put(representation, queryParams, this);
+            mLedResourceA.put(representation, queryParams, this);
         } catch (OcException e) {
             Log.e(TAG, e.toString());
             msg("Error occurred while invoking \"put\" API");
@@ -325,7 +397,7 @@ public class MainActivity extends AppCompatActivity implements
         msg("Posting light representation...");
         OcRepresentation representation = null;
         try {
-            representation = mDemo.getOcRepresentation();
+            representation = mDemo.sensorGetOcRepresentation();
         } catch (OcException e) {
             Log.e(TAG, e.toString());
             msg("Failed to get OcRepresentation from a light");
@@ -371,7 +443,7 @@ public class MainActivity extends AppCompatActivity implements
         msg("Posting again light representation...");
         OcRepresentation representation2 = null;
         try {
-            representation2 = mDemo.getOcRepresentation();
+            representation2 = mDemo.sensorGetOcRepresentation();
         } catch (OcException e) {
             Log.e(TAG, e.toString());
             msg("Failed to get OcRepresentation from a light");
@@ -572,6 +644,8 @@ public class MainActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        activity = this;
+
         mConsoleTextView = (TextView) findViewById(R.id.consoleTextView);
         mConsoleTextView.setMovementMethod(new ScrollingMovementMethod());
         mScrollView = (ScrollView) findViewById(R.id.scrollView);
@@ -579,6 +653,75 @@ public class MainActivity extends AppCompatActivity implements
         final Button button = (Button) findViewById(R.id.button_findserver);
 
         ListView listview = (ListView)findViewById(R.id.listView);
+
+        listview.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+            @Override
+            public void onItemClick(AdapterView parent, View view, int position, long id){
+                Intent intent = new Intent();
+                Bundle bundle = new Bundle();
+
+                if(id < found_devices) {
+                    if(id == mDemo.getLedIndex()) {
+                        LedControl led_dialog = new LedControl(activity);
+                        led_dialog.show();
+                        msg("Progress: " + String.valueOf(led_dialog.get_progress()));
+                        try {
+                            OcRepresentation rep = new OcRepresentation();
+                            rep.setValue("status", led_dialog.get_progress());
+
+                            Map<String, String> queryParams = new HashMap<>();
+                            sleep(1);
+                            // Invoke resource's "put" API with a new representation, query parameters and
+                            // OcResource.OnPutListener event listener implementation
+                            mLedResourceA.put(rep, queryParams, activity);
+
+                        } catch (OcException e) {
+
+                        }
+
+
+                    }
+                } else {
+                    msg("Out of range");
+                }
+                /*
+                switch((int) id) {
+                    case 0:
+                        intent.setClass(MainActivity.this, Overview.class);
+                        break;
+
+                    case 1:
+                        intent.setClass(MainActivity.this, Newincome.class);
+                        break;
+
+                    case 2:
+                        intent.setClass(MainActivity.this, Newoutgoing.class);
+                        break;
+
+                    case 3:
+                        intent.setClass(MainActivity.this, Detail.class);
+                        bundle.putInt("select", Detail.DETAIL_INCOME_MOD_DEL);
+                        intent.putExtras(bundle);
+                        break;
+
+                    case 4:
+                        intent.setClass(MainActivity.this, Detail.class);
+                        bundle.putInt("select", Detail.DETAIL_OUTGOING_MOD_DEL);
+                        intent.putExtras(bundle);
+                        break;
+
+                    case 5:
+                        intent.setClass(MainActivity.this, Settings.class);
+                        break;
+
+                    default:
+                        return;
+                }
+
+                startActivity(intent);
+                */
+            }
+        });
 
         list_item = new ArrayList<String>();
         list_item.add("");
@@ -607,6 +750,8 @@ public class MainActivity extends AppCompatActivity implements
             String consoleOutput = savedInstanceState.getString("consoleOutputString");
             mConsoleTextView.setText(consoleOutput);
         }
+
+
 
     }
 
