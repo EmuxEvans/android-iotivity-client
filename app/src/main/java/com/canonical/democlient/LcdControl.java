@@ -2,7 +2,9 @@ package com.canonical.democlient;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
@@ -48,6 +50,7 @@ public class LcdControl extends Dialog implements
                 if(!temp.isEmpty())
                     lcd_str = temp;
 
+                sendMessage();
                 dismiss();
                 break;
             case R.id.button_lcd_cancel:
@@ -58,7 +61,10 @@ public class LcdControl extends Dialog implements
         }
     }
 
-    public String get_string() {
-        return lcd_str;
+    private void sendMessage() {
+        Intent intent = new Intent("lcd_string");
+        // You can also include some extra data.
+        intent.putExtra("string", lcd_str);
+        LocalBroadcastManager.getInstance(this.c).sendBroadcast(intent);
     }
 }

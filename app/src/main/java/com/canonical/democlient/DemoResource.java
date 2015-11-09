@@ -53,31 +53,31 @@ public class DemoResource {
         mTouch_index = 0;
     }
 
-    public void sensorGetOcRepresentation(OcRepresentation rep) throws OcException {
+    public void sensorSetOcRepresentation(OcRepresentation rep) throws OcException {
         mTemp = rep.getValue(DemoResource.SENSOR_TEMPERATURE_KEY);
         mLight = rep.getValue(DemoResource.SENSOR_LIGHT_KEY);
         mSound = rep.getValue(DemoResource.SENSOR_SOUND_KEY);
     }
 
-    public void ledGetOcRepresentation(OcRepresentation rep) throws OcException {
+    public void ledSetOcRepresentation(OcRepresentation rep) throws OcException {
         mLed = rep.getValue(DemoResource.LED_STATUS_KEY);
     }
 
-    public void lcdGetOcRepresentation(OcRepresentation rep) throws OcException {
+    public void lcdSetOcRepresentation(OcRepresentation rep) throws OcException {
         mLcd = rep.getValue(DemoResource.LCD_KEY);
     }
 
-    public void buzzerGetOcRepresentation(OcRepresentation rep) throws OcException {
+    public void buzzerSetOcRepresentation(OcRepresentation rep) throws OcException {
         mBuzzer = rep.getValue(DemoResource.BUZZER_KEY);
     }
 
-    public void buttonGetOcRepresentation(OcRepresentation rep) throws OcException {
+    public void buttonSetOcRepresentation(OcRepresentation rep) throws OcException {
         mButton = rep.getValue(DemoResource.BUTTON_KEY);
         mTouch = rep.getValue(DemoResource.TOUCH_KEY);
     }
 
 
-    public OcRepresentation sensorSetOcRepresentation() throws OcException {
+    public OcRepresentation sensorGetOcRepresentation() throws OcException {
         OcRepresentation rep = new OcRepresentation();
         rep.setValue(SENSOR_TEMPERATURE_KEY, mTemp);
         rep.setValue(SENSOR_LIGHT_KEY, mLight);
@@ -85,19 +85,19 @@ public class DemoResource {
         return rep;
     }
 
-    public OcRepresentation ledSetOcRepresentation() throws OcException {
+    public OcRepresentation ledGetOcRepresentation() throws OcException {
         OcRepresentation rep = new OcRepresentation();
         rep.setValue(LED_STATUS_KEY, mLed);
         return rep;
     }
 
-    public OcRepresentation lcdSetOcRepresentation() throws OcException {
+    public OcRepresentation lcdGetOcRepresentation() throws OcException {
         OcRepresentation rep = new OcRepresentation();
         rep.setValue(LCD_KEY, mLcd);
         return rep;
     }
 
-    public OcRepresentation buzzerSetOcRepresentation() throws OcException {
+    public OcRepresentation buzzerGetOcRepresentation() throws OcException {
         OcRepresentation rep = new OcRepresentation();
         rep.setValue(BUZZER_KEY, mBuzzer);
         return rep;

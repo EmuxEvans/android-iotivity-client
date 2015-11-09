@@ -2,11 +2,15 @@ package com.canonical.democlient;
 
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.method.ScrollingMovementMethod;
@@ -41,6 +45,9 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 
 
 public class MainActivity extends AppCompatActivity implements
@@ -60,15 +67,15 @@ public class MainActivity extends AppCompatActivity implements
 
     private final static String TAG = MainActivity.class.getSimpleName();
 
-    private final static String sensor_name_temp = "(Arduino) Temperature sensor";
-    private final static String sensor_name_light = "(Arduino) Light sensor";
-    private final static String sensor_name_sound = "(Arduino) Sound sensor";
+    private final static String sensor_name_temp = "(Arduino) Temperature sensor: ";
+    private final static String sensor_name_light = "(Arduino) Light sensor: ";
+    private final static String sensor_name_sound = "(Arduino) Sound sensor: ";
 
-    private final static String led_name = "(Arduino) LED";
-    private final static String lcd_name = "(Arduino) LCD";
-    private final static String buzzer_name = "(Arduino) Buzzer";
-    private final static String button_name_button = "(Arduino) Button";
-    private final static String button_name_touch = "(Arduino) Touch";
+    private final static String led_name = "(Arduino) LED: ";
+    private final static String lcd_name = "(Arduino) LCD: ";
+    private final static String buzzer_name = "(Arduino) Buzzer: ";
+    private final static String button_name_button = "(Arduino) Button: ";
+    private final static String button_name_touch = "(Arduino) Touch: ";
 
     ArrayList<String> list_item;
     ArrayAdapter<String> list_adapter;
@@ -145,6 +152,15 @@ public class MainActivity extends AppCompatActivity implements
             list_item.add("");
         }
     }
+
+    private void update_list_ui() {
+        runOnUiThread(new Runnable() {
+            public synchronized void run() {
+                list_adapter.notifyDataSetChanged();
+
+            }
+        });
+    }
     /**
      * An event handler to be executed whenever a "findResource" request completes successfully
      *
@@ -196,19 +212,22 @@ public class MainActivity extends AppCompatActivity implements
             //destroyed by the GC when it is out of scope.
             mSensorResourceA = ocResource;
 
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    add_device();
-                    mDemo.setTempIndex(found_devices++);
-                    add_device();
-                    mDemo.setLightIndex(found_devices++);
-                    add_device();
-                    mDemo.setSoundIndex(found_devices++);
-                    list_adapter.notifyDataSetChanged();
-                }
-            });
+            add_device();
+            mDemo.setTempIndex(found_devices++);
+            add_device();
+            mDemo.setLightIndex(found_devices++);
+            add_device();
+            mDemo.setSoundIndex(found_devices++);
+            update_list_ui();
 
             // Call a local method which will internally invoke "get" API on the SensorResource
+            /*
+            new Thread(new Runnable() {
+                public void run() {
+                    update_sensor_thread();
+                }
+            }).start();
+            */
             getSensorResourceRepresentation();
         }
 
@@ -222,21 +241,18 @@ public class MainActivity extends AppCompatActivity implements
             //destroyed by the GC when it is out of scope.
             mLedResourceA = ocResource;
 
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    add_device();
-                    mDemo.setLedIndex(found_devices++);
-                    list_item.set(mDemo.getLedIndex(), led_name);
-                    list_adapter.notifyDataSetChanged();
-                }
-            });
+            add_device();
+            mDemo.setLedIndex(found_devices++);
+            list_item.set(mDemo.getLedIndex(), led_name);
+            update_list_ui();
+
 
             // Call a local method which will internally invoke "get" API on the SensorResource
             getLedResourceRepresentation();
         }
 
         if (resourceUri.equals("/grove/lcd")) {
-            if (mLedResourceA != null) {
+            if (mLcdResourceA != null) {
                 msg("Found another LCD resource (Arduino), ignoring");
                 return;
             }
@@ -245,14 +261,12 @@ public class MainActivity extends AppCompatActivity implements
             //destroyed by the GC when it is out of scope.
             mLcdResourceA = ocResource;
 
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    add_device();
-                    mDemo.setLcdIndex(found_devices++);
-                    list_item.set(mDemo.getLcdIndex(), lcd_name);
-                    list_adapter.notifyDataSetChanged();
-                }
-            });
+            add_device();
+            mDemo.setLcdIndex(found_devices++);
+            list_item.set(mDemo.getLcdIndex(), lcd_name);
+            update_list_ui();
+
+            getLcdResourceRepresentation();
         }
 
         if (resourceUri.equals("/grove/buzzer")) {
@@ -265,18 +279,14 @@ public class MainActivity extends AppCompatActivity implements
             //destroyed by the GC when it is out of scope.
             mBuzzerResourceA = ocResource;
 
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    add_device();
-                    mDemo.setBuzzerIndex(found_devices++);
-                    list_item.set(mDemo.getBuzzerIndex(), buzzer_name);
-                    list_adapter.notifyDataSetChanged();
-                }
-            });
+            add_device();
+            mDemo.setBuzzerIndex(found_devices++);
+            list_item.set(mDemo.getBuzzerIndex(), buzzer_name);
+            update_list_ui();
         }
 
         if (resourceUri.equals("/grove/button")) {
-            if (mLedResourceA != null) {
+            if (mButtonResourceA != null) {
                 msg("Found another button resource (Arduino), ignoring");
                 return;
             }
@@ -285,17 +295,13 @@ public class MainActivity extends AppCompatActivity implements
             //destroyed by the GC when it is out of scope.
             mButtonResourceA = ocResource;
 
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    add_device();
-                    mDemo.setButtonIndex(found_devices++);
-                    list_item.set(mDemo.getButtonIndex(), button_name_button);
-                    add_device();
-                    mDemo.setTouchIndex(found_devices++);
-                    list_item.set(mDemo.getTouchIndex(), button_name_touch);
-                    list_adapter.notifyDataSetChanged();
-                }
-            });
+            add_device();
+            mDemo.setButtonIndex(found_devices++);
+            list_item.set(mDemo.getButtonIndex(), button_name_button);
+            add_device();
+            mDemo.setTouchIndex(found_devices++);
+            list_item.set(mDemo.getTouchIndex(), button_name_touch);
+            update_list_ui();
 
             // Call a local method which will internally invoke "get" API on the SensorResource
             getButtonResourceRepresentation();
@@ -305,6 +311,13 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Local method to get representation of a found sensor resource
      */
+    private void update_sensor_thread() {
+        while(true) {
+            getSensorResourceRepresentation();
+            sleep(5);
+        }
+    }
+
     private void getSensorResourceRepresentation() {
         msg("Getting Sensor Representation...");
 
@@ -334,6 +347,22 @@ public class MainActivity extends AppCompatActivity implements
             msg("Error occurred while invoking \"get\" API");
         }
     }
+
+    private void getLcdResourceRepresentation() {
+        msg("Getting LCD Representation...");
+
+        Map<String, String> queryParams = new HashMap<>();
+        try {
+            // Invoke resource's "get" API with a OcResource.OnGetListener event
+            // listener implementation
+            sleep(1);
+            mLcdResourceA.get(queryParams, this);
+        } catch (OcException e) {
+            Log.e(TAG, e.toString());
+            msg("Error occurred while invoking \"get\" API");
+        }
+    }
+
 
     private void getButtonResourceRepresentation() {
         msg("Getting Button Representation...");
@@ -365,20 +394,16 @@ public class MainActivity extends AppCompatActivity implements
         if (ocRepresentation.getUri().equals("/grove/sensor")) {
             msg("Sensor attributes: ");
             try {
-                mDemo.sensorGetOcRepresentation(ocRepresentation);
+                mDemo.sensorSetOcRepresentation(ocRepresentation);
 
                 msg(String.valueOf(mDemo.getTemp()));
                 msg(String.valueOf(mDemo.getLight()));
                 msg(String.valueOf(mDemo.getSound()));
 
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        list_item.set(mDemo.getTempIndex(), sensor_name_temp + ": " + String.valueOf(mDemo.getTemp()));
-                        list_item.set(mDemo.getLightIndex(), sensor_name_light + ": " + String.valueOf(mDemo.getLight()));
-                        list_item.set(mDemo.getSoundIndex(), sensor_name_sound + ": " + String.valueOf(mDemo.getSound()));
-                        list_adapter.notifyDataSetChanged();
-                    }
-                });
+                list_item.set(mDemo.getTempIndex(), sensor_name_temp + String.valueOf(mDemo.getTemp()));
+                list_item.set(mDemo.getLightIndex(), sensor_name_light + String.valueOf(mDemo.getLight()));
+                list_item.set(mDemo.getSoundIndex(), sensor_name_sound + String.valueOf(mDemo.getSound()));
+                update_list_ui();
             } catch (OcException e) {
                 Log.e(TAG, e.toString());
                 msg("Failed to read the attributes of a sensor resource");
@@ -387,34 +412,40 @@ public class MainActivity extends AppCompatActivity implements
         } else if(ocRepresentation.getUri().equals("/grove/led")) {
             try {
                 //Read attribute values into local representation of a LED
-                mDemo.ledGetOcRepresentation(ocRepresentation);
-                msg(String.valueOf(mDemo.getSound()));
+                mDemo.ledSetOcRepresentation(ocRepresentation);
+                msg(String.valueOf(mDemo.getLed()));
 
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        list_item.set(mDemo.getLedIndex(), led_name + ": " + String.valueOf(mDemo.getLed()));
-                        list_adapter.notifyDataSetChanged();
-                    }
-                });
+                list_item.set(mDemo.getLedIndex(), led_name + String.valueOf(mDemo.getLed()));
+                update_list_ui();
                 //Call a local method which will internally invoke put API on the foundLightResource
                 //putLedRepresentation();
             } catch (OcException e) {
                 Log.e(TAG, e.toString());
                 msg("Failed to read the attributes of a LED resource");
             }
+        } else if(ocRepresentation.getUri().equals("/grove/lcd")) {
+            try {
+                //Read attribute values into local representation of a LCD
+                mDemo.lcdSetOcRepresentation(ocRepresentation);
+                msg(mDemo.getLcd());
+
+                list_item.set(mDemo.getLcdIndex(), lcd_name + mDemo.getLcd());
+                update_list_ui();
+                //Call a local method which will internally invoke put API on the foundLightResource
+                //putLedRepresentation();
+            } catch (OcException e) {
+                Log.e(TAG, e.toString());
+                msg("Failed to read the attributes of a LCD resource");
+            }
         } else if(ocRepresentation.getUri().equals("/grove/button")) {
             try {
                 //Read attribute values into local representation of a LED
-                mDemo.buttonGetOcRepresentation(ocRepresentation);
+                mDemo.buttonSetOcRepresentation(ocRepresentation);
                 msg(String.valueOf(mDemo.getButton()));
 
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        list_item.set(mDemo.getButtonIndex(), button_name_button + ": " + String.valueOf(mDemo.getButton()));
-                        list_item.set(mDemo.getTouchIndex(), button_name_touch + ": " + String.valueOf(mDemo.getTouch()));
-                        list_adapter.notifyDataSetChanged();
-                    }
-                });
+                list_item.set(mDemo.getButtonIndex(), button_name_button + String.valueOf(mDemo.getButton()));
+                list_item.set(mDemo.getTouchIndex(), button_name_touch + String.valueOf(mDemo.getTouch()));
+                update_list_ui();
                 //Call a local method which will internally invoke put API on the foundLightResource
                 //putLedRepresentation();
             } catch (OcException e) {
@@ -450,7 +481,7 @@ public class MainActivity extends AppCompatActivity implements
         msg("Putting LED representation...");
         OcRepresentation representation = null;
         try {
-            representation = mDemo.ledSetOcRepresentation();
+            representation = mDemo.ledGetOcRepresentation();
         } catch (OcException e) {
             Log.e(TAG, e.toString());
             msg("Failed to set OcRepresentation from LED");
@@ -473,7 +504,7 @@ public class MainActivity extends AppCompatActivity implements
         msg("Putting LCD representation...");
         OcRepresentation representation = null;
         try {
-            representation = mDemo.lcdSetOcRepresentation();
+            representation = mDemo.lcdGetOcRepresentation();
         } catch (OcException e) {
             Log.e(TAG, e.toString());
             msg("Failed to set OcRepresentation from LCD");
@@ -496,7 +527,7 @@ public class MainActivity extends AppCompatActivity implements
         msg("Putting buzzer representation...");
         OcRepresentation representation = null;
         try {
-            representation = mDemo.buzzerSetOcRepresentation();
+            representation = mDemo.buzzerGetOcRepresentation();
         } catch (OcException e) {
             Log.e(TAG, e.toString());
             msg("Failed to set OcRepresentation from buzzer");
@@ -523,20 +554,33 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public synchronized void onPutCompleted(List<OcHeaderOption> list, OcRepresentation ocRepresentation) {
         msg("PUT request was successful");
-        try {
-            mDemo.sensorGetOcRepresentation(ocRepresentation);
-        } catch (OcException e) {
-            Log.e(TAG, e.toString());
-            msg("Failed to create sensor representation");
-        }
 
-        if(ocRepresentation.getUri().equals("/grove/led")) {
+        try {
+            mDemo.ledSetOcRepresentation(ocRepresentation);
             msg("LED status: ");
             msg(String.valueOf(mDemo.getLed()));
-        } else if(ocRepresentation.getUri().equals("/grove/lcd")) {
+            list_item.set(mDemo.getLedIndex(), led_name + String.valueOf(mDemo.getLed()));
+            update_list_ui();
+            sendLedDoneMessage();
+            return;
+        } catch (OcException e) {
+            Log.e(TAG, e.toString());
+            msg("Failed to set LED representation");
+        }
+
+        try {
+            mDemo.lcdSetOcRepresentation(ocRepresentation);
             msg("LCD string: ");
             msg(mDemo.getLcd());
+            list_item.set(mDemo.getLcdIndex(), lcd_name + ": " + mDemo.getLcd());
+            update_list_ui();
+            return;
+        } catch (OcException e) {
+            Log.e(TAG, e.toString());
+            msg("Failed to set LCD representation");
         }
+
+        sendBuzzerDoneMessage();
 
         printLine();
 
@@ -572,7 +616,7 @@ public class MainActivity extends AppCompatActivity implements
         msg("Posting light representation...");
         OcRepresentation representation = null;
         try {
-            representation = mDemo.sensorSetOcRepresentation();
+            representation = mDemo.sensorGetOcRepresentation();
         } catch (OcException e) {
             Log.e(TAG, e.toString());
             msg("Failed to get OcRepresentation from a light");
@@ -605,7 +649,7 @@ public class MainActivity extends AppCompatActivity implements
                 msg("\tUri of the created resource: " +
                         ocRepresentation.getValue(OcResource.CREATED_URI_KEY));
             } else {
-                mDemo.sensorGetOcRepresentation(ocRepresentation);
+                mDemo.sensorSetOcRepresentation(ocRepresentation);
                 //msg(mDemo.toString());
             }
         } catch (OcException e) {
@@ -618,7 +662,7 @@ public class MainActivity extends AppCompatActivity implements
         msg("Posting again light representation...");
         OcRepresentation representation2 = null;
         try {
-            representation2 = mDemo.sensorSetOcRepresentation();
+            representation2 = mDemo.sensorGetOcRepresentation();
         } catch (OcException e) {
             Log.e(TAG, e.toString());
             msg("Failed to get OcRepresentation from a light");
@@ -670,7 +714,7 @@ public class MainActivity extends AppCompatActivity implements
                     msg("\tUri of the created resource: " +
                             ocRepresentation.getValue(OcResource.CREATED_URI_KEY));
                 } else {
-                    mDemo.sensorGetOcRepresentation(ocRepresentation);
+                    mDemo.sensorSetOcRepresentation(ocRepresentation);
                     msg(mDemo.toString());
                 }
             } catch (OcException e) {
@@ -739,7 +783,7 @@ public class MainActivity extends AppCompatActivity implements
         msg("OBSERVE Result:");
         msg("\tSequenceNumber:" + sequenceNumber);
         try {
-            mDemo.sensorGetOcRepresentation(ocRepresentation);
+            mDemo.sensorSetOcRepresentation(ocRepresentation);
         } catch (OcException e) {
             Log.e(TAG, e.toString());
             msg("Failed to get the attribute values");
@@ -823,51 +867,42 @@ public class MainActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        activity = this;
-
         mConsoleTextView = (TextView) findViewById(R.id.consoleTextView);
         mConsoleTextView.setMovementMethod(new ScrollingMovementMethod());
         mScrollView = (ScrollView) findViewById(R.id.scrollView);
         mScrollView.fullScroll(View.FOCUS_DOWN);
         final Button button = (Button) findViewById(R.id.button_findserver);
 
-        ListView listview = (ListView)findViewById(R.id.listView);
+        ListView listview = (ListView) findViewById(R.id.listView);
 
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView parent, View view, int position, long id) {
                 if (id < found_devices) {
-                    if (id == 0) {//mDemo.getLedIndex()) {
-                        LedControl led_dialog = new LedControl(MainActivity.this);
+                    if (id == mDemo.getLedIndex()) {
+                        LedControl led_dialog = new LedControl(MainActivity.this, mDemo.getLed());
                         led_dialog.show();
-                        msg("Progress: " + String.valueOf(led_dialog.get_progress()));
-                        try {
-                            OcRepresentation rep = mDemo.ledSetOcRepresentation();
-                            rep.setValue(mDemo.LED_STATUS_KEY, led_dialog.get_progress());
-                            putLedRepresentation();
-                        } catch (OcException e) {
-                            Log.e(TAG, e.toString());
-                            msg("Failed to put LED status");
-                        }
-                    } else if (id == 1) {//mDemo.getLcdIndex()) {
+                    } else if (id == mDemo.getLcdIndex()) {
                         LcdControl lcd_dialog = new LcdControl(MainActivity.this);
                         lcd_dialog.show();
-                        msg("LCD string: " + lcd_dialog.get_string());
-                        try {
-                            OcRepresentation rep = mDemo.lcdSetOcRepresentation();
-                            rep.setValue(mDemo.LCD_KEY, lcd_dialog.get_string());
-                            putLcdRepresentation();
-                        } catch (OcException e) {
-                            Log.e(TAG, e.toString());
-                            msg("Failed to put LCD status");
-                        }
-
+                    } else if (id == mDemo.getBuzzerIndex()) {
+                        BuzzerControl buzzer_dialog = new BuzzerControl(MainActivity.this);
+                        buzzer_dialog.show();
                     }
                 } else {
                     msg("Out of range");
                 }
             }
         });
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(mLedControlReceiver,
+                new IntentFilter("led_adjust"));
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(mLcdControlReceiver,
+                new IntentFilter("lcd_string"));
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(mBuzzerControlReceiver,
+                new IntentFilter("buzzer_tone"));
 
         list_item = new ArrayList<String>();
         list_item.add("");
@@ -896,6 +931,76 @@ public class MainActivity extends AppCompatActivity implements
             mConsoleTextView.setText(consoleOutput);
         }
 
+    }
+
+    private BroadcastReceiver mLedControlReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            int progress = intent.getIntExtra("progress", 0);
+            msg("LED status: " + String.valueOf(progress));
+            try {
+                OcRepresentation rep = mDemo.ledGetOcRepresentation();
+                rep.setValue(mDemo.LED_STATUS_KEY, progress);
+                mDemo.ledSetOcRepresentation(rep);
+                putLedRepresentation();
+            } catch (OcException e) {
+                Log.e(TAG, e.toString());
+                msg("Failed to put LED status");
+            }
+        }
+    };
+
+    private void sendLedDoneMessage() {
+        Intent intent = new Intent("led_put_done");
+        // You can also include some extra data.
+        intent.putExtra("put_done", true);
+        msg("Send LED done message");
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    private BroadcastReceiver mLcdControlReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            String str = intent.getStringExtra("string");
+            msg("LCD string: " + str);
+            try {
+                OcRepresentation rep = mDemo.lcdGetOcRepresentation();
+                rep.setValue(mDemo.LCD_KEY, str);
+                mDemo.lcdSetOcRepresentation(rep);
+                putLcdRepresentation();
+            } catch (OcException e) {
+                Log.e(TAG, e.toString());
+                msg("Failed to put LCD status");
+            }
+        }
+    };
+
+    private BroadcastReceiver mBuzzerControlReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            int tone = intent.getIntExtra("tone", 0);
+            msg("Buzzer tone: " + String.valueOf(tone));
+            try {
+                OcRepresentation rep = mDemo.buzzerGetOcRepresentation();
+                rep.setValue(mDemo.BUZZER_KEY, tone);
+                mDemo.buzzerSetOcRepresentation(rep);
+                putBuzzerRepresentation();
+            } catch (OcException e) {
+                Log.e(TAG, e.toString());
+                msg("Failed to put Buzzer tone");
+            }
+        }
+    };
+
+    private void sendBuzzerDoneMessage() {
+        Intent intent = new Intent("buzzer_put_done");
+        // You can also include some extra data.
+        intent.putExtra("put_done", true);
+        msg("Send Buzzer done message");
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     @Override
