@@ -41,14 +41,14 @@ public class LedResourceA implements
 
     private int mLed;
     private int mLedListIndex;
-    private final static String TAG = "Arduino LED Class";
+    private final static String TAG = "Arduino LED";
 
     private final static String resource_type = "grove.led";
     private final static String resource_uri = "/grove/led";
     private final static String LED_STATUS_KEY = "status";
 
     public final static String led_display = "(Arduino) LED: ";
-    public final static String msg_found = "msg_found_a";
+    public final static String msg_found = "msg_found_resource";
     public final static String msg_put_done = "msg_led_put_done_a";
 
 
@@ -73,7 +73,7 @@ public class LedResourceA implements
         return rep;
     }
 
-    public int getLed() { return mLed; };
+    public int getLed() { return mLed; }
 
     public void setLedIndex(int index) { mLedListIndex = index; }
     public int getLedIndex() { return mLedListIndex; }
@@ -145,7 +145,7 @@ public class LedResourceA implements
                 main_list_item.set(mLedListIndex, led_display + String.valueOf(mLed));
                 main_list_adapter.notifyDataSetChanged();
 
-                Log.e(TAG, "LED status:");
+                Log.e(TAG, "Arduino LED status:");
                 Log.e(TAG, String.valueOf(mLed));
             }
         });
@@ -203,7 +203,7 @@ public class LedResourceA implements
             //destroyed by the GC when it is out of scope.
             mResource = ocResource;
 
-            sendBroadcastMessage(msg_found, "led_found_resource", true);
+            sendBroadcastMessage(msg_found, "led_found_resource_a", true);
         }
     }
 
@@ -241,7 +241,6 @@ public class LedResourceA implements
         update_list();
         sendBroadcastMessage(msg_put_done, "put_done", true);
     }
-
 
     @Override
     public synchronized void onPutFailed(Throwable throwable) {
@@ -288,16 +287,16 @@ public class LedResourceA implements
                                                 OcRepresentation ocRepresentation,
                                                 int sequenceNumber) {
         if (OcResource.OnObserveListener.REGISTER == sequenceNumber) {
-            Log.e(TAG, "LED observe registration action is successful:");
+            Log.e(TAG, "Arduino LED observe registration action is successful:");
         } else if (OcResource.OnObserveListener.DEREGISTER == sequenceNumber) {
-            Log.e(TAG, "LED observe De-registration action is successful");
+            Log.e(TAG, "Arduino LED observe De-registration action is successful");
         } else if (OcResource.OnObserveListener.NO_OPTION == sequenceNumber) {
-            Log.e(TAG, "LED observe registration or de-registration action is failed");
+            Log.e(TAG, "Arduino LED observe registration or de-registration action is failed");
         }
 
         Log.e(TAG, "OBSERVE Result:");
         Log.e(TAG, "\tSequenceNumber:" + sequenceNumber);
-        //update_list(ocRepresentation);
+        //update_list();
     }
 
     @Override

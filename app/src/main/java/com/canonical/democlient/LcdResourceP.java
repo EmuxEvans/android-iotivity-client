@@ -25,7 +25,7 @@ import java.util.Map;
 /**
  * Created by gerald on 2015/11/10.
  */
-public class LcdResourceA implements
+public class LcdResourceP implements
         OcPlatform.OnResourceFoundListener,
         OcResource.OnGetListener,
         OcResource.OnPutListener,
@@ -40,16 +40,16 @@ public class LcdResourceA implements
     private OcResource mResource = null;
     private String mLcd;
     private int mLcdListIndex;
-    private final static String TAG = "Arduino LCD";
+    private final static String TAG = "RaspberryPi2 LCD";
 
-    private final static String resource_type = "grove.lcd";
-    private final static String resource_uri = "/grove/lcd";
+    private final static String resource_type = "grovepi.lcd";
+    private final static String resource_uri = "/grovepi/lcd";
     private static final String LCD_STRING_KEY = "lcd";
 
-    public final static String lcd_display = "(Arduino) LCD: ";
+    public final static String lcd_display = "(RaspberryPi2) LCD: ";
     public final static String msg_found = "msg_found_resource";
 
-    public LcdResourceA(Activity main, Context c, ArrayList<String> list_item,
+    public LcdResourceP(Activity main, Context c, ArrayList<String> list_item,
                         ArrayAdapter<String> list_adapter) {
         main_activity = main;
         main_context = c;
@@ -86,7 +86,7 @@ public class LcdResourceA implements
             Log.e(TAG, "Error occurred while invoking \"get\" API");
         }
     }
-    
+
     public void putResourceRepresentation(String str) {
         Log.e(TAG, "Putting LCD representation...");
         mLcd = str;
@@ -138,7 +138,7 @@ public class LcdResourceA implements
             public synchronized void run() {
                 main_list_item.set(mLcdListIndex, lcd_display + mLcd);
                 main_list_adapter.notifyDataSetChanged();
-                Log.e(TAG, "Arduino LCD:");
+                Log.e(TAG, "RaspberryPi2 LCD:");
                 Log.e(TAG, mLcd);
             }
         });
@@ -188,7 +188,7 @@ public class LcdResourceA implements
 
         if (resourceUri.equals(resource_uri)) {
             if (mResource != null) {
-                Log.e(TAG, "Found another Arduino LCD resource, ignoring");
+                Log.e(TAG, "Found another RaspberryPi2 LCD resource, ignoring");
                 return;
             }
 
@@ -196,7 +196,7 @@ public class LcdResourceA implements
             //destroyed by the GC when it is out of scope.
             mResource = ocResource;
 
-            sendBroadcastMessage(msg_found, "lcd_found_resource_a", true);
+            sendBroadcastMessage(msg_found, "lcd_found_resource_p", true);
         }
     }
 
@@ -281,11 +281,11 @@ public class LcdResourceA implements
                                                 OcRepresentation ocRepresentation,
                                                 int sequenceNumber) {
         if (OcResource.OnObserveListener.REGISTER == sequenceNumber) {
-            Log.e(TAG, "Arduino LCD observe registration action is successful:");
+            Log.e(TAG, "RaspberryPi2 LCD observe registration action is successful:");
         } else if (OcResource.OnObserveListener.DEREGISTER == sequenceNumber) {
-            Log.e(TAG, "Arduino LCD observe De-registration action is successful");
+            Log.e(TAG, "RaspberryPi2 LCD observe De-registration action is successful");
         } else if (OcResource.OnObserveListener.NO_OPTION == sequenceNumber) {
-            Log.e(TAG, "Arduino LCD observe registration or de-registration action is failed");
+            Log.e(TAG, "RaspberryPi2 LCD observe registration or de-registration action is failed");
         }
 
         Log.e(TAG, "OBSERVE Result:");

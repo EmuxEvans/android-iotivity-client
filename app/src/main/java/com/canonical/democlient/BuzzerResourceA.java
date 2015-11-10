@@ -40,16 +40,15 @@ public class BuzzerResourceA implements
     private OcResource mResource = null;
     private int mBuzzer;
     private int mBuzzerListIndex;
-    private final static String TAG = "Arduino LCD Class";
+    private final static String TAG = "Arduino Buzzer";
 
     private final static String resource_type = "grove.buzzer";
     private final static String resource_uri = "/grove/buzzer";
     private static final String BUZZER_TONE_KEY = "tone";
 
     public final static String buzzer_display = "(Arduino) Buzzer: ";
-    public final static String msg_found = "msg_found_a";
+    public final static String msg_found = "msg_found_resource";
     public final static String msg_put_done = "msg_buzzer_put_done_a";
-
 
 
     public BuzzerResourceA(Activity main, Context c, ArrayList<String> list_item,
@@ -72,8 +71,6 @@ public class BuzzerResourceA implements
         rep.setValue(BUZZER_TONE_KEY, mBuzzer);
         return rep;
     }
-
-    public int getBuzzer() { return mBuzzer; }
 
     public void setBuzzerIndex(int index) { mBuzzerListIndex = index; }
     public int getBuzzerIndex() { return mBuzzerListIndex; }
@@ -190,7 +187,7 @@ public class BuzzerResourceA implements
             //destroyed by the GC when it is out of scope.
             mResource = ocResource;
 
-            sendBroadcastMessage(msg_found, "buzzer_found_resource", true);
+            sendBroadcastMessage(msg_found, "buzzer_found_resource_a", true);
         }
     }
 
@@ -273,16 +270,16 @@ public class BuzzerResourceA implements
                                                 OcRepresentation ocRepresentation,
                                                 int sequenceNumber) {
         if (OcResource.OnObserveListener.REGISTER == sequenceNumber) {
-            Log.e(TAG, "Buzzer observe registration action is successful:");
+            Log.e(TAG, "Arduino buzzer observe registration action is successful:");
         } else if (OcResource.OnObserveListener.DEREGISTER == sequenceNumber) {
-            Log.e(TAG, "Buzzer observe De-registration action is successful");
+            Log.e(TAG, "Arduino buzzer observe De-registration action is successful");
         } else if (OcResource.OnObserveListener.NO_OPTION == sequenceNumber) {
-            Log.e(TAG, "Buzzer observe registration or de-registration action is failed");
+            Log.e(TAG, "Arduino buzzer observe registration or de-registration action is failed");
         }
 
         Log.e(TAG, "OBSERVE Result:");
         Log.e(TAG, "\tSequenceNumber:" + sequenceNumber);
-        //update_list(ocRepresentation);
+        //update_list();
     }
 
     @Override

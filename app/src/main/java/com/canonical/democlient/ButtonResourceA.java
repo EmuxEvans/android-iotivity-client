@@ -44,7 +44,7 @@ public class ButtonResourceA implements
     private int mTouch;
     private int mButtonListIndex;
     private int mTouchListIndex;
-    private final static String TAG = "Arduino Button Class";
+    private final static String TAG = "Arduino Button";
 
     private final static String resource_type = "grove.button";
     private final static String resource_uri = "/grove/button";
@@ -53,7 +53,7 @@ public class ButtonResourceA implements
 
     public final static String button_display = "(Arduino) Button: ";
     public final static String button_touch_display = "(Arduino) Touch: ";
-    public final static String msg_found = "msg_found_a";
+    public final static String msg_found = "msg_found_resource";
 
     public ButtonResourceA(Activity main, Context c, ArrayList<String> list_item,
                            ArrayAdapter<String> list_adapter) {
@@ -79,9 +79,6 @@ public class ButtonResourceA implements
         rep.setValue(BUTTON_TOUCH_KEY, mTouch);
         return rep;
     }
-
-    public int getButton() { return mButton; }
-    public int getTouch() { return mTouch; };
 
     public void setButtonIndex(int index) { mButtonListIndex = index; }
     public void setTouchIndex(int index) { mTouchListIndex = index; }
@@ -142,7 +139,7 @@ public class ButtonResourceA implements
                 main_list_item.set(mTouchListIndex, button_touch_display + String.valueOf(mTouch));
                 main_list_adapter.notifyDataSetChanged();
 
-                Log.e(TAG, "Button:");
+                Log.e(TAG, "Arduino Button:");
                 Log.e(TAG, String.valueOf(mButton));
                 Log.e(TAG, String.valueOf(mTouch));
             }
@@ -201,7 +198,7 @@ public class ButtonResourceA implements
             //destroyed by the GC when it is out of scope.
             mResource = ocResource;
 
-            sendBroadcastMessage(msg_found, "button_found_resource", true);
+            sendBroadcastMessage(msg_found, "button_found_resource_a", true);
         }
     }
 
@@ -283,11 +280,11 @@ public class ButtonResourceA implements
                                                 OcRepresentation ocRepresentation,
                                                 int sequenceNumber) {
         if (OcResource.OnObserveListener.REGISTER == sequenceNumber) {
-            Log.e(TAG, "Button observe registration action is successful:");
+            Log.e(TAG, "Arduino button observe registration action is successful:");
         } else if (OcResource.OnObserveListener.DEREGISTER == sequenceNumber) {
-            Log.e(TAG, "Button Observe De-registration action is successful");
+            Log.e(TAG, "Arduino button Observe De-registration action is successful");
         } else if (OcResource.OnObserveListener.NO_OPTION == sequenceNumber) {
-            Log.e(TAG, "Button Observe registration or de-registration action is failed");
+            Log.e(TAG, "Arduino button Observe registration or de-registration action is failed");
         }
 
         Log.e(TAG, "OBSERVE Result:");

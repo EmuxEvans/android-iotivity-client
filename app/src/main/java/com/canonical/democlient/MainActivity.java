@@ -45,6 +45,12 @@ public class MainActivity extends AppCompatActivity{
     private BuzzerResourceA buzzer_a = null;
     private ButtonResourceA button_a = null;
 
+    private SensorResourceP sensor_p = null;
+    private LedResourceP led_p = null;
+    private LcdResourceP lcd_p = null;
+    private BuzzerResourceP buzzer_p = null;
+    private ButtonResourceP button_p = null;
+
 
     /* Items in ListView */
     private ArrayList<String> list_item;
@@ -84,6 +90,22 @@ public class MainActivity extends AppCompatActivity{
 
         button_a = new ButtonResourceA(MainActivity.this, this, list_item, list_adapter);
         button_a.find_resource();
+
+
+        sensor_p = new SensorResourceP(MainActivity.this, this, list_item, list_adapter);
+        sensor_p.find_resource();
+
+        led_p = new LedResourceP(MainActivity.this, this, list_item, list_adapter);
+        led_p.find_resource();
+
+        lcd_p = new LcdResourceP(MainActivity.this, this, list_item, list_adapter);
+        lcd_p.find_resource();
+
+        buzzer_p = new BuzzerResourceP(MainActivity.this, this, list_item, list_adapter);
+        buzzer_p.find_resource();
+
+        button_p = new ButtonResourceP(MainActivity.this, this, list_item, list_adapter);
+        button_p.find_resource();
     }
 
     private void add_device() {
@@ -103,7 +125,7 @@ public class MainActivity extends AppCompatActivity{
                 }
                 */
 
-                if(device.equals("sensor_found_resource")){
+                if(device.equals("sensor_found_resource_a")){
                     add_device();
                     sensor_a.setTempIndex(found_devices++);
                     add_device();
@@ -111,28 +133,64 @@ public class MainActivity extends AppCompatActivity{
                     add_device();
                     sensor_a.setSoundIndex(found_devices++);
                     list_adapter.notifyDataSetChanged();
-                } else if(device.equals("led_found_resource")) {
+                } else if(device.equals("led_found_resource_a")) {
                     add_device();
                     led_a.setLedIndex(found_devices++);
                     list_item.set(led_a.getLedIndex(), led_a.led_display);
                     list_adapter.notifyDataSetChanged();
-                } else if(device.equals("lcd_found_resource")) {
+                } else if(device.equals("lcd_found_resource_a")) {
                     add_device();
                     lcd_a.setLcdIndex(found_devices++);
                     list_item.set(lcd_a.getLcdIndex(), lcd_a.lcd_display);
                     list_adapter.notifyDataSetChanged();
-                } else if(device.equals("buzzer_found_resource")) {
+                } else if(device.equals("buzzer_found_resource_a")) {
                     add_device();
                     buzzer_a.setBuzzerIndex(found_devices++);
                     list_item.set(buzzer_a.getBuzzerIndex(), buzzer_a.buzzer_display);
                     list_adapter.notifyDataSetChanged();
-                } else if(device.equals("button_found_resource")) {
+                } else if(device.equals("button_found_resource_a")) {
                     add_device();
                     button_a.setButtonIndex(found_devices++);
                     list_item.set(button_a.getButtonIndex(), button_a.button_display);
                     add_device();
                     button_a.setTouchIndex(found_devices++);
                     list_item.set(button_a.getTouchIndex(), button_a.button_touch_display);
+                    list_adapter.notifyDataSetChanged();
+                } else if(device.equals("sensor_found_resource_p")) {
+                    add_device();
+                    sensor_p.setTempIndex(found_devices++);
+                    add_device();
+                    sensor_p.setHumidityIndex(found_devices++);
+                    add_device();
+                    sensor_p.setLightIndex(found_devices++);
+                    add_device();
+                    sensor_p.setSoundIndex(found_devices++);
+                    list_adapter.notifyDataSetChanged();
+                } else if(device.equals("led_found_resource_p")) {
+                    add_device();
+                    led_p.setLedRedIndex(found_devices++);
+                    list_item.set(led_p.getLedRedIndex(), led_p.led_red_display);
+                    add_device();
+                    led_p.setLedGreenIndex(found_devices++);
+                    list_item.set(led_p.getLedGreenIndex(), led_p.led_green_display);
+                    add_device();
+                    led_p.setLedBlueIndex(found_devices++);
+                    list_item.set(led_p.getLedBlueIndex(), led_p.led_blue_display);
+                    list_adapter.notifyDataSetChanged();
+                } else if(device.equals("lcd_found_resource_p")) {
+                    add_device();
+                    lcd_p.setLcdIndex(found_devices++);
+                    list_item.set(lcd_p.getLcdIndex(), lcd_p.lcd_display);
+                    list_adapter.notifyDataSetChanged();
+                } else if(device.equals("buzzer_found_resource_p")) {
+                    add_device();
+                    buzzer_p.setBuzzerIndex(found_devices++);
+                    list_item.set(buzzer_p.getBuzzerIndex(), buzzer_p.buzzer_display);
+                    list_adapter.notifyDataSetChanged();
+                } else if(device.equals("button_found_resource_p")) {
+                    add_device();
+                    button_p.setButtonIndex(found_devices++);
+                    list_item.set(button_p.getButtonIndex(), button_p.button_display);
                     list_adapter.notifyDataSetChanged();
                 }
 
@@ -171,6 +229,12 @@ public class MainActivity extends AppCompatActivity{
         lcd_a.reset();
         buzzer_a.reset();
         button_a.reset();
+
+        sensor_p.reset();
+        led_p.reset();
+        lcd_p.reset();
+        buzzer_p.reset();
+        button_p.reset();
     }
 
     private TextView mConsoleTextView;
@@ -214,7 +278,7 @@ public class MainActivity extends AppCompatActivity{
         });
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mFoundResourceReceiver,
-                new IntentFilter("msg_found_a"));
+                new IntentFilter("msg_found_resource"));
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mLedControlReceiver,
                 new IntentFilter("msg_led_adjust"));
@@ -259,48 +323,90 @@ public class MainActivity extends AppCompatActivity{
         public void onReceive(Context context, Intent intent) {
             boolean found_resource;
 
-            found_resource = intent.getBooleanExtra("sensor_found_resource", false);
+            found_resource = intent.getBooleanExtra("sensor_found_resource_a", false);
             if(found_resource) {
-                msg("Message: found sensor resource");
-                create_list("sensor_found_resource");
+                msg("Message: found Arduino sensor resource");
+                create_list("sensor_found_resource_a");
                 //sensor_a.getResourceRepresentation();
                 sensor_a.start_update_thread();
                 return;
             }
 
-            found_resource = intent.getBooleanExtra("led_found_resource", false);
+            found_resource = intent.getBooleanExtra("led_found_resource_a", false);
             if(found_resource) {
-                msg("Message: found LED resource");
-                create_list("led_found_resource");
+                msg("Message: found Arduino LED resource");
+                create_list("led_found_resource_a");
                 led_a.getResourceRepresentation();
                 return;
             }
 
-            found_resource = intent.getBooleanExtra("lcd_found_resource", false);
+            found_resource = intent.getBooleanExtra("lcd_found_resource_a", false);
             if(found_resource) {
-                msg("Message: found LCD resource");
-                create_list("lcd_found_resource");
+                msg("Message: found Arduino LCD resource");
+                create_list("lcd_found_resource_a");
                 lcd_a.getResourceRepresentation();
                 return;
             }
 
-            found_resource = intent.getBooleanExtra("buzzer_found_resource", false);
+            found_resource = intent.getBooleanExtra("buzzer_found_resource_a", false);
             if(found_resource) {
-                msg("Message: found buzzer resource");
-                create_list("buzzer_found_resource");
+                msg("Message: found Arduino buzzer resource");
+                create_list("buzzer_found_resource_a");
                 buzzer_a.getResourceRepresentation();
                 return;
             }
 
-            found_resource = intent.getBooleanExtra("button_found_resource", false);
+            found_resource = intent.getBooleanExtra("button_found_resource_a", false);
             if(found_resource) {
-                msg("Message: found button resource");
-                create_list("button_found_resource");
+                msg("Message: found Arduino button resource");
+                create_list("button_found_resource_a");
                 //button_a.getResourceRepresentation();
                 button_a.observeFoundResource();
                 return;
             }
 
+
+            found_resource = intent.getBooleanExtra("sensor_found_resource_p", false);
+            if(found_resource) {
+                msg("Message: found RaspberryPi2 sensor resource");
+                create_list("sensor_found_resource_p");
+                sensor_p.getResourceRepresentation();
+                //sensor_p.start_update_thread();
+                return;
+            }
+
+            found_resource = intent.getBooleanExtra("led_found_resource_p", false);
+            if(found_resource) {
+                msg("Message: found RaspberryPi2 LED resource");
+                create_list("led_found_resource_p");
+                led_p.getResourceRepresentation();
+                return;
+            }
+
+            found_resource = intent.getBooleanExtra("lcd_found_resource_p", false);
+            if(found_resource) {
+                msg("Message: found RaspberryPi2 LCD resource");
+                create_list("lcd_found_resource_p");
+                lcd_p.getResourceRepresentation();
+                return;
+            }
+
+            found_resource = intent.getBooleanExtra("buzzer_found_resource_p", false);
+            if(found_resource) {
+                msg("Message: found RaspberryPi2 buzzer resource");
+                create_list("buzzer_found_resource_p");
+                buzzer_p.getResourceRepresentation();
+                return;
+            }
+
+            found_resource = intent.getBooleanExtra("button_found_resource_p", false);
+            if(found_resource) {
+                msg("Message: found RaspberryPi2 button resource");
+                create_list("button_found_resource_p");
+                //button_p.getResourceRepresentation();
+                button_p.observeFoundResource();
+                return;
+            }
         }
     };
 
@@ -333,4 +439,10 @@ public class MainActivity extends AppCompatActivity{
             buzzer_a.putResourceRepresentation(tone);
         }
     };
+
+    @Override
+    public void onDestroy() {
+        sensor_a.stop_update_thread();
+        super.onDestroy();
+    }
 }

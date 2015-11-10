@@ -6,8 +6,10 @@ import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 
 import org.iotivity.base.ErrorCode;
+import org.iotivity.base.ObserveType;
 import org.iotivity.base.OcConnectivityType;
 import org.iotivity.base.OcException;
 import org.iotivity.base.OcHeaderOption;
@@ -25,7 +27,7 @@ import java.util.Map;
 /**
  * Created by gerald on 2015/11/10.
  */
-public class LcdResourceA implements
+public class ButtonResourceP implements
         OcPlatform.OnResourceFoundListener,
         OcResource.OnGetListener,
         OcResource.OnPutListener,
@@ -38,78 +40,40 @@ public class LcdResourceA implements
     private ArrayAdapter<String> main_list_adapter;
     private Map<OcResourceIdentifier, OcResource> mFoundResources = new HashMap<>();
     private OcResource mResource = null;
-    private String mLcd;
-    private int mLcdListIndex;
-    private final static String TAG = "Arduino LCD";
+    private int mButton;
+    private int mButtonListIndex;
+    private final static String TAG = "RaspberryPi2 Button";
 
-    private final static String resource_type = "grove.lcd";
-    private final static String resource_uri = "/grove/lcd";
-    private static final String LCD_STRING_KEY = "lcd";
+    private final static String resource_type = "grovepi.button";
+    private final static String resource_uri = "/grovepi/button";
+    private static final String BUTTON_KEY = "button";
 
-    public final static String lcd_display = "(Arduino) LCD: ";
+    public final static String button_display = "(RaspberryPi2) Button: ";
     public final static String msg_found = "msg_found_resource";
 
-    public LcdResourceA(Activity main, Context c, ArrayList<String> list_item,
-                        ArrayAdapter<String> list_adapter) {
+    public ButtonResourceP(Activity main, Context c, ArrayList<String> list_item,
+                           ArrayAdapter<String> list_adapter) {
         main_activity = main;
         main_context = c;
         main_list_item = list_item;
         main_list_adapter = list_adapter;
 
-        mLcd = "";
-        mLcdListIndex = -1;
+        mButton = 0;
+        mButtonListIndex = -1;
     }
 
     public void setOcRepresentation(OcRepresentation rep) throws OcException {
-        mLcd = rep.getValue(LCD_STRING_KEY);
+        mButton = rep.getValue(BUTTON_KEY);
     }
 
     public OcRepresentation getOcRepresentation() throws OcException {
         OcRepresentation rep = new OcRepresentation();
-        rep.setValue(LCD_STRING_KEY, mLcd);
+        rep.setValue(BUTTON_KEY, mButton);
         return rep;
     }
 
-    public void setLcdIndex(int index) { mLcdListIndex = index; }
-    public int getLcdIndex() { return mLcdListIndex; }
-
-    public void getResourceRepresentation() {
-        Log.e(TAG, "Getting LCD Representation...");
-
-        Map<String, String> queryParams = new HashMap<>();
-        try {
-            // Invoke resource's "get" API with a OcResource.OnGetListener event
-            // listener implementation
-            mResource.get(queryParams, this);
-        } catch (OcException e) {
-            Log.e(TAG, e.toString());
-            Log.e(TAG, "Error occurred while invoking \"get\" API");
-        }
-    }
-    
-    public void putResourceRepresentation(String str) {
-        Log.e(TAG, "Putting LCD representation...");
-        mLcd = str;
-
-        OcRepresentation representation = null;
-        try {
-            representation = getOcRepresentation();
-        } catch (OcException e) {
-            Log.e(TAG, e.toString());
-            Log.e(TAG, "Failed to set OcRepresentation from LCD");
-        }
-
-        Map<String, String> queryParams = new HashMap<>();
-
-        try {
-            // Invoke resource's "put" API with a new representation, query parameters and
-            // OcResource.OnPutListener event listener implementation
-            mResource.put(representation, queryParams, this);
-        } catch (OcException e) {
-            Log.e(TAG, e.toString());
-            Log.e(TAG, "Error occurred while invoking \"put\" API");
-        }
-    }
+    public void setButtonIndex(int index) { mButtonListIndex = index; }
+    public int getButtonIndex() { return mButtonListIndex; }
 
     public void find_resource() {
         String requestUri;
@@ -129,17 +93,43 @@ public class LcdResourceA implements
         }
     }
 
+    public void getResourceRepresentation() {
+        Log.e(TAG, "Getting button Representation...");
+
+        Map<String, String> queryParams = new HashMap<>();
+        try {
+            // Invoke resource's "get" API with a OcResource.OnGetListener event
+            // listener implementation
+            mResource.get(queryParams, this);
+        } catch (OcException e) {
+            Log.e(TAG, e.toString());
+            Log.e(TAG, "Error occurred while invoking \"get\" API");
+        }
+    }
+
+    public void observeFoundResource() {
+        try {
+            // Invoke resource's "observe" API with a observe type, query parameters and
+            // OcResource.OnObserveListener event listener implementation
+            mResource.observe(ObserveType.OBSERVE, new HashMap<String, String>(), this);
+        } catch (OcException e) {
+            Log.e(TAG, e.toString());
+            Log.e(TAG, "Error occurred while invoking \"observe\" API");
+        }
+    }
+
     public void reset() {
         mResource = null;
     }
 
-    public void update_list() {
+    private void update_list() {
         main_activity.runOnUiThread(new Runnable() {
             public synchronized void run() {
-                main_list_item.set(mLcdListIndex, lcd_display + mLcd);
+                main_list_item.set(mButtonListIndex, button_display + String.valueOf(mButton));
                 main_list_adapter.notifyDataSetChanged();
-                Log.e(TAG, "Arduino LCD:");
-                Log.e(TAG, mLcd);
+
+                Log.e(TAG, "RaspberryPi2 Button:");
+                Log.e(TAG, String.valueOf(mButton));
             }
         });
     }
@@ -148,7 +138,7 @@ public class LcdResourceA implements
         Intent intent = new Intent(type);
 
         intent.putExtra(key, b);
-        Log.e(TAG, "Send LCD message: " + type +", " + key + ", " + String.valueOf(b));
+        Log.e(TAG, "Send button message: " + type + ", " + key + ", " + String.valueOf(b));
         LocalBroadcastManager.getInstance(main_context).sendBroadcast(intent);
     }
 
@@ -188,7 +178,7 @@ public class LcdResourceA implements
 
         if (resourceUri.equals(resource_uri)) {
             if (mResource != null) {
-                Log.e(TAG, "Found another Arduino LCD resource, ignoring");
+                Log.e(TAG, "Found another Arduino button resource, ignoring");
                 return;
             }
 
@@ -196,7 +186,7 @@ public class LcdResourceA implements
             //destroyed by the GC when it is out of scope.
             mResource = ocResource;
 
-            sendBroadcastMessage(msg_found, "lcd_found_resource_a", true);
+            sendBroadcastMessage(msg_found, "button_found_resource_p", true);
         }
     }
 
@@ -205,15 +195,13 @@ public class LcdResourceA implements
                                             OcRepresentation ocRepresentation) {
         Log.e(TAG, "GET request was successful");
         Log.e(TAG, "Resource URI: " + ocRepresentation.getUri());
-        Log.e(TAG, "index: " + String.valueOf(mLcdListIndex));
 
         try {
             setOcRepresentation(ocRepresentation);
-            Log.e(TAG, "update_list");
             update_list();
         } catch (OcException e) {
             Log.e(TAG, e.toString());
-            Log.e(TAG, "Failed to set LCD representation");
+            Log.e(TAG, "Failed to set button representation");
         }
     }
 
@@ -227,13 +215,12 @@ public class LcdResourceA implements
             Log.e(TAG, "Error code: " + errCode);
         }
 
-        Log.e(TAG, "Failed to get representation of a found LCD resource");
+        Log.e(TAG, "Failed to get representation of a found button resource");
     }
 
     @Override
     public synchronized void onPutCompleted(List<OcHeaderOption> list, OcRepresentation ocRepresentation) {
         Log.e(TAG, "PUT request was successful");
-        update_list();
     }
 
     @Override
@@ -281,16 +268,23 @@ public class LcdResourceA implements
                                                 OcRepresentation ocRepresentation,
                                                 int sequenceNumber) {
         if (OcResource.OnObserveListener.REGISTER == sequenceNumber) {
-            Log.e(TAG, "Arduino LCD observe registration action is successful:");
+            Log.e(TAG, "RaspberryPi2 button observe registration action is successful:");
         } else if (OcResource.OnObserveListener.DEREGISTER == sequenceNumber) {
-            Log.e(TAG, "Arduino LCD observe De-registration action is successful");
+            Log.e(TAG, "RaspberryPi2 button Observe De-registration action is successful");
         } else if (OcResource.OnObserveListener.NO_OPTION == sequenceNumber) {
-            Log.e(TAG, "Arduino LCD observe registration or de-registration action is failed");
+            Log.e(TAG, "RaspberryPi2 button Observe registration or de-registration action is failed");
         }
 
         Log.e(TAG, "OBSERVE Result:");
         Log.e(TAG, "\tSequenceNumber:" + sequenceNumber);
-        //update_list();
+
+        try {
+            setOcRepresentation(ocRepresentation);
+            update_list();
+        } catch (OcException e) {
+            Log.e(TAG, e.toString());
+            Log.e(TAG, "Failed to set button representation");
+        }
     }
 
     @Override
@@ -302,6 +296,6 @@ public class LcdResourceA implements
             //do something based on errorCode
             Log.e(TAG, "Error code: " + errCode);
         }
-        Log.e(TAG, "Observation of the found LCD resource has failed");
+        Log.e(TAG, "Observation of the found button resource has failed");
     }
 }

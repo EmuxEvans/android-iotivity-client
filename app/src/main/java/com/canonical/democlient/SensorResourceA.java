@@ -41,6 +41,7 @@ public class SensorResourceA implements
     private Map<OcResourceIdentifier, OcResource> mFoundResources = new HashMap<>();
     private OcResource mResource = null;
     private Thread sensor_thread;
+    private boolean sensor_thread_running;
     private boolean sensor_thread_read_done;
     private double mTemp;
     private int mLight;
@@ -48,7 +49,7 @@ public class SensorResourceA implements
     private int mTempListIndex;
     private int mLightListIndex;
     private int mSoundListIndex;
-    private final static String TAG = "Arduino Sensor Class";
+    private final static String TAG = "Arduino Sensor";
 
     private final static String resource_type = "grove.sensor";
     private final static String resource_uri = "/grove/sensor";
@@ -61,7 +62,7 @@ public class SensorResourceA implements
     public final static String sensor_temp_display = "(Arduino) Temperature sensor: ";
     public final static String sensor_light_display = "(Arduino) Light sensor: ";
     public final static String sensor_sound_display = "(Arduino) Sound sensor: ";
-    public final static String msg_found = "msg_found_a";
+    public final static String msg_found = "msg_found_resource";
 
     public SensorResourceA(Activity main, Context c, ArrayList<String> list_item,
                            ArrayAdapter<String> list_adapter) {
@@ -72,24 +73,17 @@ public class SensorResourceA implements
 
         mTemp = 0.0;
         mLight = 0;
-        mLight = 0;
+        mSound = 0;
 
         mTempListIndex = -1;
         mLightListIndex = -1;
         mSoundListIndex = -1;
 
+        sensor_thread_running = true;
         sensor_thread_read_done = true;
 
         LocalBroadcastManager.getInstance(main_activity).registerReceiver(mSensorReadReceiver,
                 new IntentFilter(msg_read));
-    }
-
-    public OcResource getResource() {
-        return mResource;
-    }
-
-    public void setResource(OcResource r) {
-        mResource = r;
     }
 
     public void setOcRepresentation(OcRepresentation rep) throws OcException {
@@ -104,18 +98,6 @@ public class SensorResourceA implements
         rep.setValue(SENSOR_LIGHT_KEY, mLight);
         rep.setValue(SENSOR_SOUND_KEY, mSound);
         return rep;
-    }
-
-    public double getTemp() {
-        return mTemp;
-    }
-
-    public int getLight() {
-        return mLight;
-    }
-
-    public int getSound() {
-        return mSound;
     }
 
     public void setTempIndex(int index) {
@@ -185,17 +167,28 @@ public class SensorResourceA implements
         sensor_thread.start();
     }
 
+    public void stop_update_thread() {
+        sensor_thread_running = false;
+        sensor_thread.interrupt();
+    }
+
     private void update_thread() {
         Log.e(TAG, "Start update thread");
-        while(true) {
+        while(sensor_thread_running) {
             Log.e(TAG, "Start update sensors: " + String.valueOf(sensor_thread_read_done));
             if(sensor_thread_read_done) {
                 sensor_thread_read_done = false;
                 getResourceRepresentation();
+                try {
+                    sensor_thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    Log.e(TAG, e.toString());
+                }
             }
 
             try {
-                sensor_thread.sleep(2300);
+                sensor_thread.sleep(1500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 Log.e(TAG, e.toString());
@@ -222,7 +215,7 @@ public class SensorResourceA implements
                 main_list_item.set(mSoundListIndex, sensor_sound_display + String.valueOf(mSound));
                 main_list_adapter.notifyDataSetChanged();
 
-                Log.e(TAG, "Sensors:");
+                Log.e(TAG, "Arduino Sensors:");
                 Log.e(TAG, String.valueOf(mTemp));
                 Log.e(TAG, String.valueOf(mLight));
                 Log.e(TAG, String.valueOf(mSound));
@@ -282,7 +275,7 @@ public class SensorResourceA implements
             //destroyed by the GC when it is out of scope.
             mResource = ocResource;
 
-            sendBroadcastMessage(msg_found, "sensor_found_resource", true);
+            sendBroadcastMessage(msg_found, "sensor_found_resource_a", true);
         }
     }
     
@@ -365,16 +358,16 @@ public class SensorResourceA implements
                                                 OcRepresentation ocRepresentation,
                                                 int sequenceNumber) {
         if (OcResource.OnObserveListener.REGISTER == sequenceNumber) {
-            Log.e(TAG, "Observe registration action is successful:");
+            Log.e(TAG, "Arduino sensor observe registration action is successful:");
         } else if (OcResource.OnObserveListener.DEREGISTER == sequenceNumber) {
-            Log.e(TAG, "Observe De-registration action is successful");
+            Log.e(TAG, "Arduino sensor observe De-registration action is successful");
         } else if (OcResource.OnObserveListener.NO_OPTION == sequenceNumber) {
-            Log.e(TAG, "Observe registration or de-registration action is failed");
+            Log.e(TAG, "Arduino sensor observe registration or de-registration action is failed");
         }
 
         Log.e(TAG, "OBSERVE Result:");
         Log.e(TAG, "\tSequenceNumber:" + sequenceNumber);
-        //update_list(ocRepresentation);
+        //update_list();
     }
 
     @Override

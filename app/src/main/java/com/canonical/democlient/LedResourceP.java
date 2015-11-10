@@ -25,7 +25,7 @@ import java.util.Map;
 /**
  * Created by gerald on 2015/11/10.
  */
-public class LcdResourceA implements
+public class LedResourceP implements
         OcPlatform.OnResourceFoundListener,
         OcResource.OnGetListener,
         OcResource.OnPutListener,
@@ -38,78 +38,64 @@ public class LcdResourceA implements
     private ArrayAdapter<String> main_list_adapter;
     private Map<OcResourceIdentifier, OcResource> mFoundResources = new HashMap<>();
     private OcResource mResource = null;
-    private String mLcd;
-    private int mLcdListIndex;
-    private final static String TAG = "Arduino LCD";
 
-    private final static String resource_type = "grove.lcd";
-    private final static String resource_uri = "/grove/lcd";
-    private static final String LCD_STRING_KEY = "lcd";
+    private int mLedRed;
+    private int mLedGreen;
+    private int mLedBlue;
+    private int mLedRedListIndex;
+    private int mLedGreenListIndex;
+    private int mLedBlueListIndex;
+    private final static String TAG = "RaspberryPi2 LED";
 
-    public final static String lcd_display = "(Arduino) LCD: ";
+    private final static String resource_type = "grovepi.led";
+    private final static String resource_uri = "/grovepi/led";
+    private final static String LED_RED_KEY = "red";
+    private final static String LED_GREEN_KEY = "green";
+    private final static String LED_BLUE_KEY = "blue";
+
+    public final static String led_red_display = "(RaspberryPi2) LED red: ";
+    public final static String led_green_display = "(RaspberryPi2) LED green: ";
+    public final static String led_blue_display = "(RaspberryPi2) LED blue: ";
     public final static String msg_found = "msg_found_resource";
+    public final static String msg_put_done = "msg_led_put_done_p";
 
-    public LcdResourceA(Activity main, Context c, ArrayList<String> list_item,
+
+    public LedResourceP(Activity main, Context c, ArrayList<String> list_item,
                         ArrayAdapter<String> list_adapter) {
         main_activity = main;
         main_context = c;
         main_list_item = list_item;
         main_list_adapter = list_adapter;
 
-        mLcd = "";
-        mLcdListIndex = -1;
+        mLedRed = 0;
+        mLedGreen = 0;
+        mLedBlue = 0;
+        mLedRedListIndex = -1;
+        mLedGreenListIndex = -1;
+        mLedBlueListIndex = -1;
     }
 
     public void setOcRepresentation(OcRepresentation rep) throws OcException {
-        mLcd = rep.getValue(LCD_STRING_KEY);
+        mLedRed = rep.getValue(LED_RED_KEY);
+        mLedGreen = rep.getValue(LED_GREEN_KEY);
+        mLedBlue = rep.getValue(LED_BLUE_KEY);
     }
 
     public OcRepresentation getOcRepresentation() throws OcException {
         OcRepresentation rep = new OcRepresentation();
-        rep.setValue(LCD_STRING_KEY, mLcd);
+        rep.setValue(LED_RED_KEY, mLedRed);
+        rep.setValue(LED_GREEN_KEY, mLedGreen);
+        rep.setValue(LED_BLUE_KEY, mLedBlue);
         return rep;
     }
 
-    public void setLcdIndex(int index) { mLcdListIndex = index; }
-    public int getLcdIndex() { return mLcdListIndex; }
+    public void setLedRedIndex(int index) { mLedRedListIndex = index; }
+    public void setLedGreenIndex(int index) { mLedGreenListIndex = index; }
+    public void setLedBlueIndex(int index) { mLedBlueListIndex = index; }
 
-    public void getResourceRepresentation() {
-        Log.e(TAG, "Getting LCD Representation...");
-
-        Map<String, String> queryParams = new HashMap<>();
-        try {
-            // Invoke resource's "get" API with a OcResource.OnGetListener event
-            // listener implementation
-            mResource.get(queryParams, this);
-        } catch (OcException e) {
-            Log.e(TAG, e.toString());
-            Log.e(TAG, "Error occurred while invoking \"get\" API");
-        }
-    }
-    
-    public void putResourceRepresentation(String str) {
-        Log.e(TAG, "Putting LCD representation...");
-        mLcd = str;
-
-        OcRepresentation representation = null;
-        try {
-            representation = getOcRepresentation();
-        } catch (OcException e) {
-            Log.e(TAG, e.toString());
-            Log.e(TAG, "Failed to set OcRepresentation from LCD");
-        }
-
-        Map<String, String> queryParams = new HashMap<>();
-
-        try {
-            // Invoke resource's "put" API with a new representation, query parameters and
-            // OcResource.OnPutListener event listener implementation
-            mResource.put(representation, queryParams, this);
-        } catch (OcException e) {
-            Log.e(TAG, e.toString());
-            Log.e(TAG, "Error occurred while invoking \"put\" API");
-        }
-    }
+    public int getLedRedIndex() { return mLedRedListIndex; }
+    public int getLedGreenIndex() { return mLedGreenListIndex; }
+    public int getLedBlueIndex() { return mLedBlueListIndex; }
 
     public void find_resource() {
         String requestUri;
@@ -129,17 +115,70 @@ public class LcdResourceA implements
         }
     }
 
+    public void getResourceRepresentation() {
+        Log.e(TAG, "Getting LED Representation...");
+
+        Map<String, String> queryParams = new HashMap<>();
+        try {
+            // Invoke resource's "get" API with a OcResource.OnGetListener event
+            // listener implementation
+            mResource.get(queryParams, this);
+        } catch (OcException e) {
+            Log.e(TAG, e.toString());
+            Log.e(TAG, "Error occurred while invoking \"get\" API");
+        }
+    }
+
+    public void putResourceRepresentation(int rgb, int status) {
+        Log.e(TAG, "Putting LED representation...");
+        switch(rgb) {
+            case 0:
+                mLedRed = status;
+                break;
+            case 1:
+                mLedGreen = status;
+                break;
+            case 2:
+                mLedBlue = status;
+                break;
+        }
+
+        OcRepresentation representation = null;
+        try {
+            representation = getOcRepresentation();
+        } catch (OcException e) {
+            Log.e(TAG, e.toString());
+            Log.e(TAG, "Failed to set OcRepresentation from LED");
+        }
+
+        Map<String, String> queryParams = new HashMap<>();
+
+        try {
+            // Invoke resource's "put" API with a new representation, query parameters and
+            // OcResource.OnPutListener event listener implementation
+            mResource.put(representation, queryParams, this);
+        } catch (OcException e) {
+            Log.e(TAG, e.toString());
+            Log.e(TAG, "Error occurred while invoking \"put\" API");
+        }
+    }
+
     public void reset() {
         mResource = null;
     }
 
-    public void update_list() {
+    private void update_list() {
         main_activity.runOnUiThread(new Runnable() {
             public synchronized void run() {
-                main_list_item.set(mLcdListIndex, lcd_display + mLcd);
+                main_list_item.set(mLedRedListIndex, led_red_display + String.valueOf(mLedRed));
+                main_list_item.set(mLedGreenListIndex, led_green_display + String.valueOf(mLedGreen));
+                main_list_item.set(mLedBlueListIndex, led_blue_display + String.valueOf(mLedBlue));
                 main_list_adapter.notifyDataSetChanged();
-                Log.e(TAG, "Arduino LCD:");
-                Log.e(TAG, mLcd);
+
+                Log.e(TAG, "Raspberry Pi 2 LED status:");
+                Log.e(TAG, String.valueOf(mLedRed));
+                Log.e(TAG, String.valueOf(mLedGreen));
+                Log.e(TAG, String.valueOf(mLedBlue));
             }
         });
     }
@@ -148,7 +187,7 @@ public class LcdResourceA implements
         Intent intent = new Intent(type);
 
         intent.putExtra(key, b);
-        Log.e(TAG, "Send LCD message: " + type +", " + key + ", " + String.valueOf(b));
+        Log.e(TAG, "Send LED message: " + type + ", " + key + ", " + String.valueOf(b));
         LocalBroadcastManager.getInstance(main_context).sendBroadcast(intent);
     }
 
@@ -188,7 +227,7 @@ public class LcdResourceA implements
 
         if (resourceUri.equals(resource_uri)) {
             if (mResource != null) {
-                Log.e(TAG, "Found another Arduino LCD resource, ignoring");
+                Log.e(TAG, "Found another Raspberry Pi 2 LED resource, ignoring");
                 return;
             }
 
@@ -196,7 +235,7 @@ public class LcdResourceA implements
             //destroyed by the GC when it is out of scope.
             mResource = ocResource;
 
-            sendBroadcastMessage(msg_found, "lcd_found_resource_a", true);
+            sendBroadcastMessage(msg_found, "led_found_resource_p", true);
         }
     }
 
@@ -205,15 +244,13 @@ public class LcdResourceA implements
                                             OcRepresentation ocRepresentation) {
         Log.e(TAG, "GET request was successful");
         Log.e(TAG, "Resource URI: " + ocRepresentation.getUri());
-        Log.e(TAG, "index: " + String.valueOf(mLcdListIndex));
 
         try {
             setOcRepresentation(ocRepresentation);
-            Log.e(TAG, "update_list");
             update_list();
         } catch (OcException e) {
             Log.e(TAG, e.toString());
-            Log.e(TAG, "Failed to set LCD representation");
+            Log.e(TAG, "Failed to set LED representation");
         }
     }
 
@@ -227,13 +264,14 @@ public class LcdResourceA implements
             Log.e(TAG, "Error code: " + errCode);
         }
 
-        Log.e(TAG, "Failed to get representation of a found LCD resource");
+        Log.e(TAG, "Failed to get representation of a found LED resource");
     }
 
     @Override
     public synchronized void onPutCompleted(List<OcHeaderOption> list, OcRepresentation ocRepresentation) {
         Log.e(TAG, "PUT request was successful");
         update_list();
+        sendBroadcastMessage(msg_put_done, "put_done", true);
     }
 
     @Override
@@ -281,11 +319,11 @@ public class LcdResourceA implements
                                                 OcRepresentation ocRepresentation,
                                                 int sequenceNumber) {
         if (OcResource.OnObserveListener.REGISTER == sequenceNumber) {
-            Log.e(TAG, "Arduino LCD observe registration action is successful:");
+            Log.e(TAG, "RaspberryPi2 LED observe registration action is successful:");
         } else if (OcResource.OnObserveListener.DEREGISTER == sequenceNumber) {
-            Log.e(TAG, "Arduino LCD observe De-registration action is successful");
+            Log.e(TAG, "RaspberryPi2 LED observe De-registration action is successful");
         } else if (OcResource.OnObserveListener.NO_OPTION == sequenceNumber) {
-            Log.e(TAG, "Arduino LCD observe registration or de-registration action is failed");
+            Log.e(TAG, "RaspberryPi2 LED observe registration or de-registration action is failed");
         }
 
         Log.e(TAG, "OBSERVE Result:");
@@ -302,6 +340,6 @@ public class LcdResourceA implements
             //do something based on errorCode
             Log.e(TAG, "Error code: " + errCode);
         }
-        Log.e(TAG, "Observation of the found LCD resource has failed");
+        Log.e(TAG, "Observation of the found LED resource has failed");
     }
 }
