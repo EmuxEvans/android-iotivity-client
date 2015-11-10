@@ -62,7 +62,7 @@ public class LcdControl extends Dialog implements
     }
 
     private void sendMessage() {
-        Intent intent = new Intent("lcd_string");
+        Intent intent = new Intent("msg_lcd_string");
         // You can also include some extra data.
         intent.putExtra("string", lcd_str);
         LocalBroadcastManager.getInstance(this.c).sendBroadcast(intent);

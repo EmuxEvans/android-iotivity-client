@@ -20,21 +20,23 @@ import org.iotivity.base.OcRepresentation;
 public class LedControl extends Dialog implements
         android.view.View.OnClickListener {
 
-    public Activity c;
-    public Dialog d;
-    public Button led_ok;
-    public Button led_cancel;
+    private Activity c;
+    private Dialog d;
+    private Button led_ok;
+    private Button led_cancel;
 
     private boolean put_done = true;
 
     private SeekBar seekBar;
     private int progress = 0;
+    private String msg_type_done;
 
-    public LedControl(Activity a, int progress_curr) {
+    public LedControl(Activity a, String msg_type, int progress_curr) {
         super(a);
         // TODO Auto-generated constructor stub
         this.c = a;
         progress = progress_curr;
+        msg_type_done = msg_type;
     }
 
     @Override
@@ -73,7 +75,7 @@ public class LedControl extends Dialog implements
         led_cancel.setOnClickListener(this);
 
         LocalBroadcastManager.getInstance(this.c).registerReceiver(mLedPutDoneReceiver,
-                new IntentFilter("led_put_done"));
+                new IntentFilter(msg_type_done));
     }
 
     @Override
@@ -95,7 +97,7 @@ public class LedControl extends Dialog implements
     }
 
     private void sendMessage() {
-        Intent intent = new Intent("led_adjust");
+        Intent intent = new Intent("msg_led_adjust");
         // You can also include some extra data.
         intent.putExtra("progress", progress);
         LocalBroadcastManager.getInstance(this.c).sendBroadcast(intent);

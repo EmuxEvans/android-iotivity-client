@@ -20,19 +20,21 @@ import android.widget.Spinner;
 public class BuzzerControl extends Dialog implements
         android.view.View.OnClickListener {
 
-    public Activity c;
-    public Dialog d;
-    public Button buzzer_ok, buzzer_cancel;
+    private Activity c;
+    private Dialog d;
+    private Button buzzer_ok, buzzer_cancel;
 
     private EditText editText;
     private int tone;
 
+    private String msg_type_done;
     private boolean put_done = true;
 
-    public BuzzerControl(Activity a) {
+    public BuzzerControl(Activity a, String msg_type) {
         super(a);
         // TODO Auto-generated constructor stub
         this.c = a;
+        msg_type_done = msg_type;
     }
 
     @Override
@@ -53,7 +55,7 @@ public class BuzzerControl extends Dialog implements
         buzzer_cancel.setOnClickListener(this);
 
         LocalBroadcastManager.getInstance(this.c).registerReceiver(mBuzzerPutDoneReceiver,
-                new IntentFilter("buzzer_put_done"));
+                new IntentFilter(msg_type_done));
 
         spinner.setOnItemSelectedListener(new Spinner.OnItemSelectedListener() {
             public void onItemSelected(AdapterView adapterView, View view, int position, long id) {
@@ -112,7 +114,7 @@ public class BuzzerControl extends Dialog implements
     }
 
     private void sendMessage() {
-        Intent intent = new Intent("buzzer_tone");
+        Intent intent = new Intent("msg_buzzer_tone");
         // You can also include some extra data.
         intent.putExtra("tone", tone);
         LocalBroadcastManager.getInstance(this.c).sendBroadcast(intent);
