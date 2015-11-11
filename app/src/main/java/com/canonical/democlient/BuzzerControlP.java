@@ -11,41 +11,43 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.SeekBar;
+import android.widget.Spinner;
+import android.widget.TextView;
 
-import org.iotivity.base.OcException;
-import org.iotivity.base.OcRepresentation;
-
-public class LedControl extends Dialog implements
+public class BuzzerControlP extends Dialog implements
         android.view.View.OnClickListener {
 
     private Activity c;
-    private Button led_ok;
-    private Button led_cancel;
+    private Button buzzer_button;
 
-    private boolean put_done = true;
-
+    private TextView testview_seconds;
     private SeekBar seekBar;
     private int progress = 0;
-    private String msg_type_done;
 
-    public LedControl(Activity a, String msg_type, int progress_curr) {
+    private String msg_type;
+
+    public BuzzerControlP(Activity a, String type) {
         super(a);
         // TODO Auto-generated constructor stub
         this.c = a;
-        progress = progress_curr;
-        msg_type_done = msg_type;
+        msg_type = type;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.led_control);
+        setContentView(R.layout.buzzer_control_p);
 
-        seekBar = (SeekBar) findViewById(R.id.seekBarLed);
-        seekBar.setProgress(progress);
+        buzzer_button = (Button) findViewById(R.id.button_beep);
+        buzzer_button.setOnClickListener(this);
+
+        seekBar = (SeekBar) findViewById(R.id.seekBar_beep);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progresValue, boolean fromUser) {
@@ -65,28 +67,13 @@ public class LedControl extends Dialog implements
 
             }
         });
-
-        led_ok = (Button) findViewById(R.id.button_led_ok);
-        led_ok.setOnClickListener(this);
-
-        led_cancel = (Button) findViewById(R.id.button_led_cancel);
-        led_cancel.setOnClickListener(this);
-
-        LocalBroadcastManager.getInstance(this.c).registerReceiver(mLedPutDoneReceiver,
-                new IntentFilter(msg_type_done));
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.button_led_ok:
-                put_done = false;
-                led_ok = (Button) findViewById(R.id.button_led_ok);
-                led_ok.setText("Putting ...");
-                led_ok.setEnabled(false);
+            case R.id.button_buzzer_ok:
                 sendMessage();
-                break;
-            case R.id.button_led_cancel:
                 dismiss();
                 break;
             default:
@@ -95,22 +82,9 @@ public class LedControl extends Dialog implements
     }
 
     private void sendMessage() {
-        Intent intent = new Intent("msg_led_adjust");
+        Intent intent = new Intent(msg_type);
         // You can also include some extra data.
-        intent.putExtra("progress", progress);
+        intent.putExtra("beep", progress);
         LocalBroadcastManager.getInstance(this.c).sendBroadcast(intent);
     }
-
-    private BroadcastReceiver mLedPutDoneReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            // Get extra data included in the Intent
-            put_done = intent.getBooleanExtra("put_done", false);
-            if(put_done) {
-                led_ok = (Button) findViewById(R.id.button_led_ok);
-                led_ok.setEnabled(true);
-                led_ok.setText("SET");
-            }
-        }
-    };
 }

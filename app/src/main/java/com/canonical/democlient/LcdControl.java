@@ -14,16 +14,18 @@ public class LcdControl extends Dialog implements
         android.view.View.OnClickListener {
 
     public Activity c;
-    public Dialog d;
     public Button lcd_ok, lcd_cancel;
 
     private EditText editText;
     private String lcd_str;
 
-    public LcdControl(Activity a) {
+    private String msg_type;
+
+    public LcdControl(Activity a, String type) {
         super(a);
         // TODO Auto-generated constructor stub
         this.c = a;
+        msg_type = type;
     }
 
     @Override
@@ -62,7 +64,7 @@ public class LcdControl extends Dialog implements
     }
 
     private void sendMessage() {
-        Intent intent = new Intent("msg_lcd_string");
+        Intent intent = new Intent(msg_type);
         // You can also include some extra data.
         intent.putExtra("string", lcd_str);
         LocalBroadcastManager.getInstance(this.c).sendBroadcast(intent);

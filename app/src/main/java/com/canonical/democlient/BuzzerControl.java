@@ -21,12 +21,9 @@ public class BuzzerControl extends Dialog implements
         android.view.View.OnClickListener {
 
     private Activity c;
-    private Dialog d;
     private Button buzzer_ok, buzzer_cancel;
 
-    private EditText editText;
     private int tone;
-
     private String msg_type_done;
     private boolean put_done = true;
 
@@ -114,7 +111,7 @@ public class BuzzerControl extends Dialog implements
     }
 
     private void sendMessage() {
-        Intent intent = new Intent("msg_buzzer_tone");
+        Intent intent = new Intent("msg_buzzer_a_tone");
         // You can also include some extra data.
         intent.putExtra("tone", tone);
         LocalBroadcastManager.getInstance(this.c).sendBroadcast(intent);

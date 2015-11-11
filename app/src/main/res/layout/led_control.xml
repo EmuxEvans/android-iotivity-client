@@ -20,7 +20,8 @@
         android:id="@+id/seekBarLed"
         android:layout_gravity="center_horizontal"
         android:layout_weight="0.06"
-        android:indeterminate="false" />
+        android:indeterminate="false"
+        android:max="255" />
 
     <Button
         android:layout_width="wrap_content"

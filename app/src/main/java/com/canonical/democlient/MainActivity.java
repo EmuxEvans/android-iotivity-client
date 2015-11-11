@@ -264,7 +264,7 @@ public class MainActivity extends AppCompatActivity{
                                 led_a.msg_put_done, led_a.getLed());
                         led_dialog.show();
                     } else if (id == lcd_a.getLcdIndex()) {
-                        LcdControl lcd_dialog = new LcdControl(MainActivity.this);
+                        LcdControl lcd_dialog = new LcdControl(MainActivity.this, "msg_lcd_a_string");
                         lcd_dialog.show();
                     } else if (id == buzzer_a.getBuzzerIndex()) {
                         BuzzerControl buzzer_dialog = new BuzzerControl(MainActivity.this,
@@ -283,11 +283,17 @@ public class MainActivity extends AppCompatActivity{
         LocalBroadcastManager.getInstance(this).registerReceiver(mLedControlReceiver,
                 new IntentFilter("msg_led_adjust"));
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(mLcdControlReceiver,
-                new IntentFilter("msg_lcd_string"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mLcdAControlReceiver,
+                new IntentFilter("msg_lcd_a_string"));
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(mBuzzerControlReceiver,
-                new IntentFilter("msg_buzzer_tone"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mLcdPControlReceiver,
+                new IntentFilter("msg_lcd_p_string"));
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(mBuzzerAControlReceiver,
+                new IntentFilter("msg_buzzer_a_tone"));
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(mBuzzerPControlReceiver,
+                new IntentFilter("msg_buzzer_p_beep"));
 
         list_item = new ArrayList<String>();
         list_item.add("");
@@ -420,7 +426,7 @@ public class MainActivity extends AppCompatActivity{
         }
     };
 
-    private BroadcastReceiver mLcdControlReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver mLcdAControlReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
@@ -430,13 +436,33 @@ public class MainActivity extends AppCompatActivity{
         }
     };
 
-    private BroadcastReceiver mBuzzerControlReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver mLcdPControlReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            String str = intent.getStringExtra("string");
+            msg("LCD string: " + str);
+            lcd_p.putResourceRepresentation(str);
+        }
+    };
+
+    private BroadcastReceiver mBuzzerAControlReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
             int tone = intent.getIntExtra("tone", 0);
             msg("Buzzer tone: " + String.valueOf(tone));
             buzzer_a.putResourceRepresentation(tone);
+        }
+    };
+
+    private BroadcastReceiver mBuzzerPControlReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            int beep = intent.getIntExtra("beep", 0);
+            msg("Buzzer beep: " + String.valueOf(beep));
+            buzzer_p.putResourceRepresentation(beep);
         }
     };
 
