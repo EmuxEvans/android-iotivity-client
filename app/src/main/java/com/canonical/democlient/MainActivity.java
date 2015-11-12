@@ -274,7 +274,7 @@ public class MainActivity extends AppCompatActivity{
                     } else if (id == led_p.getLedRedIndex() || id == led_p.getLedGreenIndex()
                             || id == led_p.getLedBlueIndex()) {
                         LedControlP led_dialog = new LedControlP(MainActivity.this,
-                                led_a.msg_put_done,
+                                led_p.msg_put_done,
                                 led_p.getmLedRed(), led_p.getmLedGreen(), led_p.getmLedBlue());
                         led_dialog.show();
                     } else if(id == lcd_p.getLcdIndex()) {
@@ -492,7 +492,7 @@ public class MainActivity extends AppCompatActivity{
         @Override
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
-            int beep = intent.getIntExtra("beep", 0);
+            double beep = intent.getDoubleExtra("beep", 0);
             msg("Buzzer beep: " + String.valueOf(beep));
             buzzer_p.putResourceRepresentation(beep);
         }

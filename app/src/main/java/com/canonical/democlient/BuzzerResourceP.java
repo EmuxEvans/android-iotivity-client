@@ -42,7 +42,7 @@ public class BuzzerResourceP implements
     private Thread find_thread = null;
     private boolean find_thread_running;
 
-    private int mBuzzer;
+    private double mBuzzer;
     private int mBuzzerListIndex;
     private final static String TAG = "RaspberryPi2 Buzzer";
 
@@ -65,7 +65,7 @@ public class BuzzerResourceP implements
         main_list_item = list_item;
         main_list_adapter = list_adapter;
 
-        mBuzzer = 0;
+        mBuzzer = 0.0;
         mBuzzerListIndex = -1;
     }
 
@@ -127,7 +127,7 @@ public class BuzzerResourceP implements
         update_list();
     }
 
-    public void putResourceRepresentation(int buzzer) {
+    public void putResourceRepresentation(double buzzer) {
         Log.e(TAG, "Putting buzzer representation...");
         mBuzzer = buzzer;
 
