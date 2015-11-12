@@ -14,11 +14,11 @@ public class LcdControl extends Dialog implements
         android.view.View.OnClickListener {
 
     public Activity c;
+    public Dialog d;
     public Button lcd_ok, lcd_cancel;
 
     private EditText editText;
     private String lcd_str;
-
     private String msg_type;
 
     public LcdControl(Activity a, String type) {

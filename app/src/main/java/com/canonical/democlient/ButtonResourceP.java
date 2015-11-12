@@ -119,7 +119,7 @@ public class ButtonResourceP implements
     }
 
     public void reset() {
-        mResource = null;
+        mFoundResources.clear();
     }
 
     private void update_list() {

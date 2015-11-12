@@ -130,7 +130,7 @@ public class LcdResourceA implements
     }
 
     public void reset() {
-        mResource = null;
+        mFoundResources.clear();
     }
 
     public void update_list() {

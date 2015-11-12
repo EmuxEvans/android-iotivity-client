@@ -89,6 +89,10 @@ public class LedResourceP implements
         return rep;
     }
 
+    public int getmLedRed() { return mLedRed; };
+    public int getmLedGreen() { return mLedGreen; };
+    public int getmLedBlue() { return mLedBlue; };
+
     public void setLedRedIndex(int index) { mLedRedListIndex = index; }
     public void setLedGreenIndex(int index) { mLedGreenListIndex = index; }
     public void setLedBlueIndex(int index) { mLedBlueListIndex = index; }
@@ -129,19 +133,12 @@ public class LedResourceP implements
         }
     }
 
-    public void putResourceRepresentation(int rgb, int status) {
+    public void putResourceRepresentation(int r, int g, int b) {
         Log.e(TAG, "Putting LED representation...");
-        switch(rgb) {
-            case 0:
-                mLedRed = status;
-                break;
-            case 1:
-                mLedGreen = status;
-                break;
-            case 2:
-                mLedBlue = status;
-                break;
-        }
+
+        mLedRed = r;
+        mLedGreen = g;
+        mLedBlue = b;
 
         OcRepresentation representation = null;
         try {
@@ -164,7 +161,7 @@ public class LedResourceP implements
     }
 
     public void reset() {
-        mResource = null;
+        mFoundResources.clear();
     }
 
     private void update_list() {

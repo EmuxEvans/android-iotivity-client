@@ -95,7 +95,7 @@ public class LedControl extends Dialog implements
     }
 
     private void sendMessage() {
-        Intent intent = new Intent("msg_led_adjust");
+        Intent intent = new Intent("msg_led_a_adjust");
         // You can also include some extra data.
         intent.putExtra("progress", progress);
         LocalBroadcastManager.getInstance(this.c).sendBroadcast(intent);

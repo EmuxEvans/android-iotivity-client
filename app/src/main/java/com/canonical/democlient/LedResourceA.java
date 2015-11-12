@@ -136,7 +136,7 @@ public class LedResourceA implements
     }
 
     public void reset() {
-        mResource = null;
+        mFoundResources.clear();
     }
 
     private void update_list() {

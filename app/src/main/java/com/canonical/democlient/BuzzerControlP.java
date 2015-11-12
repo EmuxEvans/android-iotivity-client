@@ -44,6 +44,8 @@ public class BuzzerControlP extends Dialog implements
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.buzzer_control_p);
 
+        testview_seconds = (TextView) findViewById(R.id.textView_beep);
+
         buzzer_button = (Button) findViewById(R.id.button_beep);
         buzzer_button.setOnClickListener(this);
 
@@ -52,6 +54,7 @@ public class BuzzerControlP extends Dialog implements
             @Override
             public void onProgressChanged(SeekBar seekBar, int progresValue, boolean fromUser) {
                 progress = progresValue;
+                testview_seconds.setText(String.valueOf(progress) + " seconds");
             }
 
             @Override
@@ -72,7 +75,7 @@ public class BuzzerControlP extends Dialog implements
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.button_buzzer_ok:
+            case R.id.button_beep:
                 sendMessage();
                 dismiss();
                 break;

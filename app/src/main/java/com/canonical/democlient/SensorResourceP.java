@@ -40,7 +40,7 @@ public class SensorResourceP implements
     private ArrayAdapter<String> main_list_adapter;
     private Map<OcResourceIdentifier, OcResource> mFoundResources = new HashMap<>();
     private OcResource mResource = null;
-    private Thread sensor_thread;
+    private Thread sensor_thread = null;
     private boolean sensor_thread_running;
     private boolean sensor_thread_read_done;
     private double mTemp;
@@ -94,6 +94,7 @@ public class SensorResourceP implements
 
     public void setOcRepresentation(OcRepresentation rep) throws OcException {
         mTemp = rep.getValue(SENSOR_TEMPERATURE_KEY);
+        mHumidity = rep.getValue(SENSOR_HUMIDITY_KEY);
         mLight = rep.getValue(SENSOR_LIGHT_KEY);
         mSound = rep.getValue(SENSOR_SOUND_KEY);
     }
@@ -101,6 +102,7 @@ public class SensorResourceP implements
     public OcRepresentation getOcRepresentation() throws OcException {
         OcRepresentation rep = new OcRepresentation();
         rep.setValue(SENSOR_TEMPERATURE_KEY, mTemp);
+        rep.setValue(SENSOR_HUMIDITY_KEY, mHumidity);
         rep.setValue(SENSOR_LIGHT_KEY, mLight);
         rep.setValue(SENSOR_SOUND_KEY, mSound);
         return rep;
@@ -160,8 +162,10 @@ public class SensorResourceP implements
     }
 
     public void stop_update_thread() {
-        sensor_thread_running = false;
-        sensor_thread.interrupt();
+        if(sensor_thread != null) {
+            sensor_thread_running = false;
+            sensor_thread.interrupt();
+        }
     }
 
     private void update_thread() {
@@ -172,7 +176,7 @@ public class SensorResourceP implements
                 sensor_thread_read_done = false;
                 getResourceRepresentation();
                 try {
-                    sensor_thread.sleep(1000);
+                    sensor_thread.sleep(300);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                     Log.e(TAG, e.toString());
@@ -180,7 +184,7 @@ public class SensorResourceP implements
             }
 
             try {
-                sensor_thread.sleep(1500);
+                sensor_thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 Log.e(TAG, e.toString());
@@ -189,6 +193,7 @@ public class SensorResourceP implements
     }
 
     public void reset() {
+        mFoundResources.clear();
         mResource = null;
     }
 

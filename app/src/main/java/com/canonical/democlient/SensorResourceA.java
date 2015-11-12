@@ -40,7 +40,7 @@ public class SensorResourceA implements
     private ArrayAdapter<String> main_list_adapter;
     private Map<OcResourceIdentifier, OcResource> mFoundResources = new HashMap<>();
     private OcResource mResource = null;
-    private Thread sensor_thread;
+    private Thread sensor_thread = null;
     private boolean sensor_thread_running;
     private boolean sensor_thread_read_done;
     private double mTemp;
@@ -168,8 +168,10 @@ public class SensorResourceA implements
     }
 
     public void stop_update_thread() {
-        sensor_thread_running = false;
-        sensor_thread.interrupt();
+        if(sensor_thread != null) {
+            sensor_thread_running = false;
+            sensor_thread.interrupt();
+        }
     }
 
     private void update_thread() {
@@ -197,7 +199,7 @@ public class SensorResourceA implements
     }
 
     public void reset() {
-        mResource = null;
+        mFoundResources.clear();
     }
 
     private BroadcastReceiver mSensorReadReceiver = new BroadcastReceiver() {

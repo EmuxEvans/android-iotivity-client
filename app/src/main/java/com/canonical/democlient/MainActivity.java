@@ -224,17 +224,17 @@ public class MainActivity extends AppCompatActivity{
     }
 
     private synchronized void resetGlobals() {
-        sensor_a.reset();
-        led_a.reset();
-        lcd_a.reset();
-        buzzer_a.reset();
-        button_a.reset();
+        if(sensor_a != null) { sensor_a.reset(); }
+        if(sensor_a != null) { led_a.reset(); }
+        if(sensor_a != null) { lcd_a.reset(); }
+        if(sensor_a != null) { buzzer_a.reset(); }
+        if(sensor_a != null) { button_a.reset(); }
 
-        sensor_p.reset();
-        led_p.reset();
-        lcd_p.reset();
-        buzzer_p.reset();
-        button_p.reset();
+        if(sensor_a != null) { sensor_p.reset(); }
+        if(sensor_a != null) { led_p.reset(); }
+        if(sensor_a != null) {  lcd_p.reset(); }
+        if(sensor_a != null) { buzzer_p.reset(); }
+        if(sensor_a != null) { button_p.reset(); }
     }
 
     private TextView mConsoleTextView;
@@ -270,6 +270,19 @@ public class MainActivity extends AppCompatActivity{
                         BuzzerControl buzzer_dialog = new BuzzerControl(MainActivity.this,
                                 buzzer_a.msg_put_done);
                         buzzer_dialog.show();
+                    } else if (id == led_p.getLedRedIndex() || id == led_p.getLedGreenIndex()
+                            || id == led_p.getLedBlueIndex()) {
+                        LedControlP led_dialog = new LedControlP(MainActivity.this,
+                                led_a.msg_put_done,
+                                led_p.getmLedRed(), led_p.getmLedGreen(), led_p.getmLedBlue());
+                        led_dialog.show();
+                    } else if(id == lcd_p.getLcdIndex()) {
+                        LcdControl lcd_dialog = new LcdControl(MainActivity.this, "msg_lcd_p_string");
+                        lcd_dialog.show();
+                    } else if(id == buzzer_p.getBuzzerIndex()) {
+                        BuzzerControlP buzzer_dialog = new BuzzerControlP(MainActivity.this,
+                                buzzer_p.msg_put_done);
+                        buzzer_dialog.show();
                     }
                 } else {
                     msg("Out of range");
@@ -280,8 +293,11 @@ public class MainActivity extends AppCompatActivity{
         LocalBroadcastManager.getInstance(this).registerReceiver(mFoundResourceReceiver,
                 new IntentFilter("msg_found_resource"));
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(mLedControlReceiver,
-                new IntentFilter("msg_led_adjust"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mLedAControlReceiver,
+                new IntentFilter("msg_led_a_adjust"));
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(mLedPControlReceiver,
+                new IntentFilter("msg_led_p_adjust"));
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mLcdAControlReceiver,
                 new IntentFilter("msg_lcd_a_string"));
@@ -333,8 +349,8 @@ public class MainActivity extends AppCompatActivity{
             if(found_resource) {
                 msg("Message: found Arduino sensor resource");
                 create_list("sensor_found_resource_a");
-                //sensor_a.getResourceRepresentation();
-                sensor_a.start_update_thread();
+                sensor_a.getResourceRepresentation();
+                //sensor_a.start_update_thread();
                 return;
             }
 
@@ -416,13 +432,28 @@ public class MainActivity extends AppCompatActivity{
         }
     };
 
-    private BroadcastReceiver mLedControlReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver mLedAControlReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
             int progress = intent.getIntExtra("progress", 0);
             msg("LED status: " + String.valueOf(progress));
             led_a.putResourceRepresentation(progress);
+        }
+    };
+
+    private BroadcastReceiver mLedPControlReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            int r = intent.getIntExtra("red", 0);
+            int g = intent.getIntExtra("green", 0);
+            int b = intent.getIntExtra("blue", 0);
+            msg("LED status: ");
+            msg("Red: " + String.valueOf(r));
+            msg("Green: " + String.valueOf(g));
+            msg("Blue: " + String.valueOf(b));
+            led_p.putResourceRepresentation(r, g, b);
         }
     };
 
@@ -468,7 +499,22 @@ public class MainActivity extends AppCompatActivity{
 
     @Override
     public void onDestroy() {
-        sensor_a.stop_update_thread();
+        Log.e(TAG, "on Destroy");
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mFoundResourceReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mLedAControlReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mLedPControlReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mLcdAControlReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mLcdPControlReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mBuzzerAControlReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mBuzzerPControlReceiver);
+
+        if(sensor_a != null)
+            sensor_a.stop_update_thread();
+        if(sensor_p != null)
+            sensor_p.stop_update_thread();
+
+        resetGlobals();
+
         super.onDestroy();
     }
 }
