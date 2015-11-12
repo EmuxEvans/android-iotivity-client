@@ -106,6 +106,7 @@ public class MainActivity extends AppCompatActivity{
 
         button_p = new ButtonResourceP(MainActivity.this, this, list_item, list_adapter);
         button_p.find_resource();
+
     }
 
     private void add_device() {
@@ -230,11 +231,11 @@ public class MainActivity extends AppCompatActivity{
         if(sensor_a != null) { buzzer_a.reset(); }
         if(sensor_a != null) { button_a.reset(); }
 
-        if(sensor_a != null) { sensor_p.reset(); }
-        if(sensor_a != null) { led_p.reset(); }
-        if(sensor_a != null) {  lcd_p.reset(); }
-        if(sensor_a != null) { buzzer_p.reset(); }
-        if(sensor_a != null) { button_p.reset(); }
+        if(sensor_p != null) { sensor_p.reset(); }
+        if(sensor_p != null) { led_p.reset(); }
+        if(sensor_p != null) {  lcd_p.reset(); }
+        if(sensor_p != null) { buzzer_p.reset(); }
+        if(sensor_p != null) { button_p.reset(); }
     }
 
     private TextView mConsoleTextView;
@@ -349,8 +350,8 @@ public class MainActivity extends AppCompatActivity{
             if(found_resource) {
                 msg("Message: found Arduino sensor resource");
                 create_list("sensor_found_resource_a");
-                sensor_a.getResourceRepresentation();
-                //sensor_a.start_update_thread();
+                //sensor_a.getResourceRepresentation();
+                sensor_a.start_update_thread();
                 return;
             }
 
@@ -392,8 +393,8 @@ public class MainActivity extends AppCompatActivity{
             if(found_resource) {
                 msg("Message: found RaspberryPi2 sensor resource");
                 create_list("sensor_found_resource_p");
-                sensor_p.getResourceRepresentation();
-                //sensor_p.start_update_thread();
+                //sensor_p.getResourceRepresentation();
+                sensor_p.start_update_thread();
                 return;
             }
 

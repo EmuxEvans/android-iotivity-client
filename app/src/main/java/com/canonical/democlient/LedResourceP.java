@@ -34,10 +34,13 @@ public class LedResourceP implements
 
     private Activity main_activity;
     private Context main_context;
+    private OcPlatform.OnResourceFoundListener resource_found_listener;
     private ArrayList<String> main_list_item;
     private ArrayAdapter<String> main_list_adapter;
     private Map<OcResourceIdentifier, OcResource> mFoundResources = new HashMap<>();
     private OcResource mResource = null;
+    private Thread find_thread = null;
+    private boolean find_thread_running;
 
     private int mLedRed;
     private int mLedGreen;
@@ -57,13 +60,16 @@ public class LedResourceP implements
     public final static String led_green_display = "(RaspberryPi2) LED green: ";
     public final static String led_blue_display = "(RaspberryPi2) LED blue: ";
     public final static String msg_found = "msg_found_resource";
-    public final static String msg_put_done = "msg_led_put_done_p";
+    public final static String msg_put_done = "msg_led_p_put_done";
 
 
     public LedResourceP(Activity main, Context c, ArrayList<String> list_item,
                         ArrayAdapter<String> list_adapter) {
         main_activity = main;
         main_context = c;
+        resource_found_listener = this;
+        find_thread_running = true;
+
         main_list_item = list_item;
         main_list_adapter = list_adapter;
 
@@ -102,20 +108,42 @@ public class LedResourceP implements
     public int getLedBlueIndex() { return mLedBlueListIndex; }
 
     public void find_resource() {
-        String requestUri;
+        find_thread = new Thread(new Runnable() {
+            public void run() {
+                String requestUri;
 
-        Log.e(TAG, "Finding resources of type: " + resource_type);
-        requestUri = OcPlatform.WELL_KNOWN_QUERY + "?rt=" + resource_type;
+                Log.e(TAG, "Finding resources of type: " + resource_type);
+                requestUri = OcPlatform.WELL_KNOWN_QUERY + "?rt=" + resource_type;
 
-        try {
-            OcPlatform.findResource("",
-                    requestUri,
-                    EnumSet.of(OcConnectivityType.CT_DEFAULT),
-                    this
-            );
-        } catch (OcException e) {
-            Log.e(TAG, e.toString());
-            Log.e(TAG, "Failed to invoke find resource API");
+                while(mResource == null && !Thread.interrupted() && find_thread_running) {
+                    try {
+                        OcPlatform.findResource("",
+                                requestUri,
+                                EnumSet.of(OcConnectivityType.CT_DEFAULT),
+                                resource_found_listener
+                        );
+                    } catch (OcException e) {
+                        Log.e(TAG, e.toString());
+                        Log.e(TAG, "Failed to invoke find resource API");
+                    }
+
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        Log.e(TAG, "InterruptedException");
+                        return;
+                    }
+                }
+            }
+        });
+
+        find_thread.start();
+    }
+
+    public void stop_find_thread() {
+        if(find_thread != null) {
+            find_thread_running = false;
+            find_thread.interrupt();
         }
     }
 
@@ -161,6 +189,7 @@ public class LedResourceP implements
     }
 
     public void reset() {
+        stop_find_thread();
         mFoundResources.clear();
     }
 

@@ -36,12 +36,15 @@ public class SensorResourceA implements
 
     private Activity main_activity;
     private Context main_context;
+    private OcPlatform.OnResourceFoundListener resource_found_listener;
     private ArrayList<String> main_list_item;
     private ArrayAdapter<String> main_list_adapter;
     private Map<OcResourceIdentifier, OcResource> mFoundResources = new HashMap<>();
     private OcResource mResource = null;
-    private Thread sensor_thread = null;
-    private boolean sensor_thread_running;
+    private Thread find_thread = null;
+    private boolean find_thread_running;
+    private Thread update_thread = null;
+    private boolean update_thread_running;
     private boolean sensor_thread_read_done;
     private double mTemp;
     private int mLight;
@@ -68,6 +71,11 @@ public class SensorResourceA implements
                            ArrayAdapter<String> list_adapter) {
         main_activity = main;
         main_context = c;
+        resource_found_listener = this;
+        find_thread_running = true;
+        update_thread_running = true;
+        sensor_thread_read_done = true;
+
         main_list_item = list_item;
         main_list_adapter = list_adapter;
 
@@ -78,9 +86,6 @@ public class SensorResourceA implements
         mTempListIndex = -1;
         mLightListIndex = -1;
         mSoundListIndex = -1;
-
-        sensor_thread_running = true;
-        sensor_thread_read_done = true;
 
         LocalBroadcastManager.getInstance(main_activity).registerReceiver(mSensorReadReceiver,
                 new IntentFilter(msg_read));
@@ -125,21 +130,36 @@ public class SensorResourceA implements
     }
 
     public void find_resource() {
-        String requestUri;
+        find_thread = new Thread(new Runnable() {
+            public void run() {
+                String requestUri;
 
-        Log.e(TAG, "Finding resources of type: " + resource_type);
-        requestUri = OcPlatform.WELL_KNOWN_QUERY + "?rt=" + resource_type;
+                Log.e(TAG, "Finding resources of type: " + resource_type);
+                requestUri = OcPlatform.WELL_KNOWN_QUERY + "?rt=" + resource_type;
 
-        try {
-            OcPlatform.findResource("",
-                    requestUri,
-                    EnumSet.of(OcConnectivityType.CT_DEFAULT),
-                    this
-            );
-        } catch (OcException e) {
-            Log.e(TAG, e.toString());
-            Log.e(TAG, "Failed to invoke find resource API");
-        }
+                while(mResource == null && !Thread.interrupted() && find_thread_running) {
+                    try {
+                        OcPlatform.findResource("",
+                                requestUri,
+                                EnumSet.of(OcConnectivityType.CT_DEFAULT),
+                                resource_found_listener
+                        );
+                    } catch (OcException e) {
+                        Log.e(TAG, e.toString());
+                        Log.e(TAG, "Failed to invoke find resource API");
+                    }
+
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        Log.e(TAG, "InterruptedException");
+                        return;
+                    }
+                }
+            }
+        });
+
+        find_thread.start();
     }
 
     public void getResourceRepresentation() {
@@ -157,32 +177,38 @@ public class SensorResourceA implements
     }
 
     public void start_update_thread() {
-        sensor_thread = new Thread(new Runnable(){
+        update_thread = new Thread(new Runnable(){
             @Override
             public void run() {
                 update_thread();
             }
         });
+        update_thread.start();
+    }
 
-        sensor_thread.start();
+    public void stop_find_thread() {
+        if(find_thread != null) {
+            find_thread_running = false;
+            find_thread.interrupt();
+        }
     }
 
     public void stop_update_thread() {
-        if(sensor_thread != null) {
-            sensor_thread_running = false;
-            sensor_thread.interrupt();
+        if(update_thread != null) {
+            update_thread_running = false;
+            update_thread.interrupt();
         }
     }
 
     private void update_thread() {
         Log.e(TAG, "Start update thread");
-        while(sensor_thread_running) {
+        while(update_thread_running) {
             Log.e(TAG, "Start update sensors: " + String.valueOf(sensor_thread_read_done));
             if(sensor_thread_read_done) {
                 sensor_thread_read_done = false;
                 getResourceRepresentation();
                 try {
-                    sensor_thread.sleep(1000);
+                    update_thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                     Log.e(TAG, e.toString());
@@ -190,7 +216,7 @@ public class SensorResourceA implements
             }
 
             try {
-                sensor_thread.sleep(1500);
+                update_thread.sleep(1500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 Log.e(TAG, e.toString());
@@ -199,6 +225,8 @@ public class SensorResourceA implements
     }
 
     public void reset() {
+        stop_find_thread();
+        stop_update_thread();
         mFoundResources.clear();
     }
 

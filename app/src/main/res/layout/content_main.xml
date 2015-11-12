@@ -42,21 +42,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/listView"
-        android:text="List of all resources"
+        android:text="List of all found resources"
         android:id="@+id/textView2"
         android:layout_centerHorizontal="true"
-        android:textSize="16dp" />
+        android:textSize="16dp"
+        android:textColor="#124e21" />
 
     <ListView
         android:layout_width="wrap_content"
-        android:layout_height="300dp"
+        android:layout_height="330dp"
         android:id="@+id/listView"
         android:layout_above="@+id/imageView"
         android:layout_alignParentStart="true" />
 
     <ImageView
         android:layout_width="wrap_content"
-        android:layout_height="100dp"
+        android:layout_height="80dp"
         android:id="@+id/imageView"
         android:src="@drawable/ubuntulogo"
         android:layout_alignParentBottom="true"

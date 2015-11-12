@@ -23,9 +23,13 @@ public class LedControlP extends Dialog implements
 
     private Activity c;
     private Button led_back;
-    int red_status;
-    int green_status;
-    int blue_status;
+    private Switch redSwitch;
+    private Switch greenSwitch;
+    private Switch blueSwitch;
+
+    private int red_status;
+    private int green_status;
+    private int blue_status;
 
     private boolean put_done = true;
 
@@ -47,9 +51,9 @@ public class LedControlP extends Dialog implements
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.led_control_p);
 
-        Switch redSwitch = (Switch) findViewById(R.id.switch_led_red);
-        final Switch greenSwitch = (Switch) findViewById(R.id.switch_led_green);
-        Switch blueSwitch = (Switch) findViewById(R.id.switch_led_blue);
+        redSwitch = (Switch) findViewById(R.id.switch_led_red);
+        greenSwitch = (Switch) findViewById(R.id.switch_led_green);
+        blueSwitch = (Switch) findViewById(R.id.switch_led_blue);
 
         redSwitch.setChecked(red_status != 0);
         greenSwitch.setChecked(green_status != 0);
@@ -60,14 +64,15 @@ public class LedControlP extends Dialog implements
             public void onCheckedChanged(CompoundButton buttonView,
                                          boolean isChecked) {
 
-                if(isChecked){
+                if (isChecked) {
                     Log.e("LED Control P", "Red led on");
                     red_status = 1;
-                }else{
+                } else {
                     Log.e("LED Control P", "Red led off");
                     red_status = 0;
                 }
-
+                disable_switch();
+                sendMessage();
             }
         });
 
@@ -83,7 +88,8 @@ public class LedControlP extends Dialog implements
                     Log.e("LED Control P", "Green led off");
                     green_status = 0;
                 }
-
+                disable_switch();
+                sendMessage();
             }
         });
 
@@ -99,7 +105,8 @@ public class LedControlP extends Dialog implements
                     Log.e("LED Control P", "Blue led off");
                     blue_status = 0;
                 }
-
+                disable_switch();
+                sendMessage();
             }
         });
 
@@ -122,6 +129,18 @@ public class LedControlP extends Dialog implements
         }
     }
 
+    private void disable_switch() {
+        redSwitch.setEnabled(false);
+        greenSwitch.setEnabled(false);
+        blueSwitch.setEnabled(false);
+    }
+
+    private void enable_switch() {
+        redSwitch.setEnabled(true);
+        greenSwitch.setEnabled(true);
+        blueSwitch.setEnabled(true);
+    }
+
     private void sendMessage() {
         Intent intent = new Intent("msg_led_p_adjust");
         // You can also include some extra data.
@@ -137,6 +156,7 @@ public class LedControlP extends Dialog implements
             // Get extra data included in the Intent
             put_done = intent.getBooleanExtra("put_done", false);
             if(put_done) {
+                enable_switch();
             }
         }
     };
