@@ -59,7 +59,6 @@ public class MainActivity extends AppCompatActivity{
     private final Semaphore list_lock = new Semaphore(1, true);
 
 
-
     private void startDemoClient() {
         Context context = this;
 
@@ -126,7 +125,7 @@ public class MainActivity extends AppCompatActivity{
                 }
                 */
 
-                if(device.equals("sensor_found_resource_a")){
+                if(device.equals(sensor_a.msg_content_found)){
                     add_device();
                     sensor_a.setTempIndex(found_devices++);
                     add_device();
@@ -134,22 +133,22 @@ public class MainActivity extends AppCompatActivity{
                     add_device();
                     sensor_a.setSoundIndex(found_devices++);
                     list_adapter.notifyDataSetChanged();
-                } else if(device.equals("led_found_resource_a")) {
+                } else if(device.equals(led_a.msg_content_found)) {
                     add_device();
                     led_a.setLedIndex(found_devices++);
                     list_item.set(led_a.getLedIndex(), led_a.led_display);
                     list_adapter.notifyDataSetChanged();
-                } else if(device.equals("lcd_found_resource_a")) {
+                } else if(device.equals(lcd_a.msg_content_found)) {
                     add_device();
                     lcd_a.setLcdIndex(found_devices++);
                     list_item.set(lcd_a.getLcdIndex(), lcd_a.lcd_display);
                     list_adapter.notifyDataSetChanged();
-                } else if(device.equals("buzzer_found_resource_a")) {
+                } else if(device.equals(buzzer_a.msg_content_found)) {
                     add_device();
                     buzzer_a.setBuzzerIndex(found_devices++);
                     list_item.set(buzzer_a.getBuzzerIndex(), buzzer_a.buzzer_display);
                     list_adapter.notifyDataSetChanged();
-                } else if(device.equals("button_found_resource_a")) {
+                } else if(device.equals(button_a.msg_content_found)) {
                     add_device();
                     button_a.setButtonIndex(found_devices++);
                     list_item.set(button_a.getButtonIndex(), button_a.button_display);
@@ -157,7 +156,7 @@ public class MainActivity extends AppCompatActivity{
                     button_a.setTouchIndex(found_devices++);
                     list_item.set(button_a.getTouchIndex(), button_a.button_touch_display);
                     list_adapter.notifyDataSetChanged();
-                } else if(device.equals("sensor_found_resource_p")) {
+                } else if(device.equals(sensor_p.msg_content_found)) {
                     add_device();
                     sensor_p.setTempIndex(found_devices++);
                     add_device();
@@ -167,7 +166,7 @@ public class MainActivity extends AppCompatActivity{
                     add_device();
                     sensor_p.setSoundIndex(found_devices++);
                     list_adapter.notifyDataSetChanged();
-                } else if(device.equals("led_found_resource_p")) {
+                } else if(device.equals(led_p.msg_content_found)) {
                     add_device();
                     led_p.setLedRedIndex(found_devices++);
                     list_item.set(led_p.getLedRedIndex(), led_p.led_red_display);
@@ -178,17 +177,17 @@ public class MainActivity extends AppCompatActivity{
                     led_p.setLedBlueIndex(found_devices++);
                     list_item.set(led_p.getLedBlueIndex(), led_p.led_blue_display);
                     list_adapter.notifyDataSetChanged();
-                } else if(device.equals("lcd_found_resource_p")) {
+                } else if(device.equals(lcd_p.msg_content_found)) {
                     add_device();
                     lcd_p.setLcdIndex(found_devices++);
                     list_item.set(lcd_p.getLcdIndex(), lcd_p.lcd_display);
                     list_adapter.notifyDataSetChanged();
-                } else if(device.equals("buzzer_found_resource_p")) {
+                } else if(device.equals(buzzer_p.msg_content_found)) {
                     add_device();
                     buzzer_p.setBuzzerIndex(found_devices++);
                     list_item.set(buzzer_p.getBuzzerIndex(), buzzer_p.buzzer_display);
                     list_adapter.notifyDataSetChanged();
-                } else if(device.equals("button_found_resource_p")) {
+                } else if(device.equals(button_p.msg_content_found)) {
                     add_device();
                     button_p.setButtonIndex(found_devices++);
                     list_item.set(button_p.getButtonIndex(), button_p.button_display);
@@ -262,19 +261,19 @@ public class MainActivity extends AppCompatActivity{
                 if (id < found_devices) {
                     if (id == led_a.getLedIndex()) {
                         LedControl led_dialog = new LedControl(MainActivity.this,
-                                led_a.msg_put_done, led_a.getLed());
+                                led_a.msg_type_put_done, led_a.getLed());
                         led_dialog.show();
                     } else if (id == lcd_a.getLcdIndex()) {
                         LcdControl lcd_dialog = new LcdControl(MainActivity.this, "msg_lcd_a_string");
                         lcd_dialog.show();
                     } else if (id == buzzer_a.getBuzzerIndex()) {
                         BuzzerControl buzzer_dialog = new BuzzerControl(MainActivity.this,
-                                buzzer_a.msg_put_done);
+                                buzzer_a.msg_type_put_done);
                         buzzer_dialog.show();
                     } else if (id == led_p.getLedRedIndex() || id == led_p.getLedGreenIndex()
                             || id == led_p.getLedBlueIndex()) {
                         LedControlP led_dialog = new LedControlP(MainActivity.this,
-                                led_p.msg_put_done,
+                                led_p.msg_type_put_done,
                                 led_p.getmLedRed(), led_p.getmLedGreen(), led_p.getmLedBlue());
                         led_dialog.show();
                     } else if(id == lcd_p.getLcdIndex()) {
@@ -282,7 +281,7 @@ public class MainActivity extends AppCompatActivity{
                         lcd_dialog.show();
                     } else if(id == buzzer_p.getBuzzerIndex()) {
                         BuzzerControlP buzzer_dialog = new BuzzerControlP(MainActivity.this,
-                                buzzer_p.msg_put_done);
+                                buzzer_p.msg_type_put_done);
                         buzzer_dialog.show();
                     }
                 } else {
@@ -292,7 +291,7 @@ public class MainActivity extends AppCompatActivity{
         });
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mFoundResourceReceiver,
-                new IntentFilter("msg_found_resource"));
+                new IntentFilter(DemoResource.msg_type_found));
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mLedAControlReceiver,
                 new IntentFilter("msg_led_a_adjust"));
@@ -346,10 +345,10 @@ public class MainActivity extends AppCompatActivity{
         public void onReceive(Context context, Intent intent) {
             boolean found_resource;
 
-            found_resource = intent.getBooleanExtra("sensor_found_resource_a", false);
+            found_resource = intent.getBooleanExtra(sensor_a.msg_content_found, false);
             if(found_resource) {
                 msg("Message: found Arduino sensor resource");
-                create_list("sensor_found_resource_a");
+                create_list(sensor_a.msg_content_found);
                 //sensor_a.getResourceRepresentation();
                 sensor_a.start_update_thread();
                 return;
