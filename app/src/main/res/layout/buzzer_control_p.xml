@@ -16,14 +16,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="0 seconds"
-        android:id="@+id/textView_beep"
+        android:id="@+id/textView_buzzer_p_second"
         android:layout_gravity="center_horizontal"
         android:textSize="18dp" />
 
     <SeekBar
         android:layout_width="match_parent"
         android:layout_height="30dp"
-        android:id="@+id/seekBar_beep"
+        android:id="@+id/seekBar_buzzer_p_second"
         android:layout_gravity="center_horizontal"
         android:max="10"
         android:indeterminate="false" />
@@ -32,13 +32,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Beep"
-        android:id="@+id/button_beep"
+        android:id="@+id/button_buzzer_p_beep"
         android:layout_gravity="center_horizontal" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Cancel"
-        android:id="@+id/button_beep_cancel"
+        android:id="@+id/button_buzzer_p_cancel"
         android:layout_gravity="center_horizontal" />
 </LinearLayout>

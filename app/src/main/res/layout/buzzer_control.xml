@@ -15,7 +15,7 @@
     <Spinner
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/spinner_buzzer"
+        android:id="@+id/spinner_buzzer_a"
         android:layout_gravity="center_horizontal"
         android:spinnerMode="dropdown" />
 
@@ -23,13 +23,13 @@
         android:layout_width="wrap_content"
         android:layout_height="40dp"
         android:text="SEND"
-        android:id="@+id/button_buzzer_ok"
+        android:id="@+id/button_buzzer_a_set"
         android:layout_gravity="center_horizontal" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="40dp"
         android:text="CANCEL"
-        android:id="@+id/button_buzzer_cancel"
+        android:id="@+id/button_buzzer_a_cancel"
         android:layout_gravity="center_horizontal" />
 </LinearLayout>

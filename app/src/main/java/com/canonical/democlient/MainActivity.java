@@ -39,6 +39,7 @@ import java.util.concurrent.Semaphore;
 public class MainActivity extends AppCompatActivity{
     private final static String TAG = MainActivity.class.getSimpleName();
 
+    /* All resource classes */
     private SensorResourceA sensor_a = null;
     private LedResourceA led_a = null;
     private LcdResourceA lcd_a = null;
@@ -52,13 +53,24 @@ public class MainActivity extends AppCompatActivity{
     private ButtonResourceP button_p = null;
 
 
-    /* Items in ListView */
+    /* Resource items in ListView */
     private ArrayList<String> list_item;
     private ArrayAdapter<String> list_adapter;
     private int found_devices = 0;
-    private final Semaphore list_lock = new Semaphore(1, true);
 
+    /* Debug output view */
+    private TextView mConsoleTextView;
+    private ScrollView mScrollView;
 
+    /* Messages between dialog and main activity */
+    private final static String msg_type_lcd_a_set = "msg_type_lcd_a_set";
+    private final static String msg_type_lcd_p_set = "msg_type_lcd_p_set";
+    private final static String msg_type_led_a_set = "msg_type_led_a_set";
+    private final static String msg_type_led_p_set = "msg_type_led_p_set";
+    private final static String msg_type_buzzer_a_set = "msg_type_buzzer_a_set";
+    private final static String msg_type_buzzer_p_set = "msg_type_buzzer_p_set";
+
+    /* Configure and then find all the resource by resource classes */
     private void startDemoClient() {
         Context context = this;
 
@@ -75,6 +87,7 @@ public class MainActivity extends AppCompatActivity{
         OcPlatform.Configure(platformConfig);
 
         msg("Finding all resources");
+        /* Arduino resources */
         sensor_a = new SensorResourceA(MainActivity.this, this, list_item, list_adapter);
         sensor_a.find_resource();
 
@@ -90,7 +103,7 @@ public class MainActivity extends AppCompatActivity{
         button_a = new ButtonResourceA(MainActivity.this, this, list_item, list_adapter);
         button_a.find_resource();
 
-
+        /* Raspberry Pi 2 resources */
         sensor_p = new SensorResourceP(MainActivity.this, this, list_item, list_adapter);
         sensor_p.find_resource();
 
@@ -105,26 +118,21 @@ public class MainActivity extends AppCompatActivity{
 
         button_p = new ButtonResourceP(MainActivity.this, this, list_item, list_adapter);
         button_p.find_resource();
-
     }
 
+    /* when a resource is found, add a empty item to ListView first
+     * then the GET thread will update it's content
+     */
     private void add_device() {
         if(found_devices != 0) {
             list_item.add("");
         }
     }
 
+    /* Each resource has various sensors or devices, add them to the ListView */
     private void create_list(final String device) {
         runOnUiThread(new Runnable() {
             public synchronized void run() {
-                /*
-                try {
-                    list_lock.acquire();
-                } catch (InterruptedException e) {
-                    msg("list_lock error");
-                }
-                */
-
                 if(device.equals(sensor_a.msg_content_found)){
                     add_device();
                     sensor_a.setTempIndex(found_devices++);
@@ -193,8 +201,6 @@ public class MainActivity extends AppCompatActivity{
                     list_item.set(button_p.getButtonIndex(), button_p.button_display);
                     list_adapter.notifyDataSetChanged();
                 }
-
-                //list_lock.release();
             }
         });
     }
@@ -223,6 +229,7 @@ public class MainActivity extends AppCompatActivity{
         msg("------------------------------------------------------------------------");
     }
 
+    /* Call reset in onDestroy */
     private synchronized void resetGlobals() {
         if(sensor_a != null) { sensor_a.reset(); }
         if(sensor_a != null) { led_a.reset(); }
@@ -236,10 +243,6 @@ public class MainActivity extends AppCompatActivity{
         if(sensor_p != null) { buzzer_p.reset(); }
         if(sensor_p != null) { button_p.reset(); }
     }
-
-    private TextView mConsoleTextView;
-    private ScrollView mScrollView;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -261,27 +264,28 @@ public class MainActivity extends AppCompatActivity{
                 if (id < found_devices) {
                     if (id == led_a.getLedIndex()) {
                         LedControl led_dialog = new LedControl(MainActivity.this,
-                                led_a.msg_type_put_done, led_a.getLed());
+                                msg_type_led_a_set, led_a.msg_type_put_done, led_a.msg_content_put_done,
+                                led_a.getLed());
                         led_dialog.show();
                     } else if (id == lcd_a.getLcdIndex()) {
-                        LcdControl lcd_dialog = new LcdControl(MainActivity.this, "msg_lcd_a_string");
+                        LcdControl lcd_dialog = new LcdControl(MainActivity.this, msg_type_lcd_a_set);
                         lcd_dialog.show();
                     } else if (id == buzzer_a.getBuzzerIndex()) {
                         BuzzerControl buzzer_dialog = new BuzzerControl(MainActivity.this,
-                                buzzer_a.msg_type_put_done);
+                                msg_type_buzzer_a_set, buzzer_a.msg_type_put_done, buzzer_a.msg_content_put_done);
                         buzzer_dialog.show();
                     } else if (id == led_p.getLedRedIndex() || id == led_p.getLedGreenIndex()
                             || id == led_p.getLedBlueIndex()) {
                         LedControlP led_dialog = new LedControlP(MainActivity.this,
-                                led_p.msg_type_put_done,
+                                msg_type_led_p_set, led_p.msg_type_put_done, led_p.msg_content_put_done,
                                 led_p.getmLedRed(), led_p.getmLedGreen(), led_p.getmLedBlue());
                         led_dialog.show();
                     } else if(id == lcd_p.getLcdIndex()) {
-                        LcdControl lcd_dialog = new LcdControl(MainActivity.this, "msg_lcd_p_string");
+                        LcdControl lcd_dialog = new LcdControl(MainActivity.this, msg_type_lcd_p_set);
                         lcd_dialog.show();
                     } else if(id == buzzer_p.getBuzzerIndex()) {
                         BuzzerControlP buzzer_dialog = new BuzzerControlP(MainActivity.this,
-                                buzzer_p.msg_type_put_done);
+                                msg_type_buzzer_p_set, buzzer_p.msg_type_put_done, buzzer_p.msg_content_put_done);
                         buzzer_dialog.show();
                     }
                 } else {
@@ -294,22 +298,22 @@ public class MainActivity extends AppCompatActivity{
                 new IntentFilter(DemoResource.msg_type_found));
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mLedAControlReceiver,
-                new IntentFilter("msg_led_a_adjust"));
+                new IntentFilter(msg_type_led_a_set));
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mLedPControlReceiver,
-                new IntentFilter("msg_led_p_adjust"));
+                new IntentFilter(msg_type_led_p_set));
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mLcdAControlReceiver,
-                new IntentFilter("msg_lcd_a_string"));
+                new IntentFilter(msg_type_lcd_a_set));
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mLcdPControlReceiver,
-                new IntentFilter("msg_lcd_p_string"));
+                new IntentFilter(msg_type_lcd_p_set));
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mBuzzerAControlReceiver,
-                new IntentFilter("msg_buzzer_a_tone"));
+                new IntentFilter(msg_type_buzzer_a_set));
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mBuzzerPControlReceiver,
-                new IntentFilter("msg_buzzer_p_beep"));
+                new IntentFilter(msg_type_buzzer_p_set));
 
         list_item = new ArrayList<String>();
         list_item.add("");
@@ -324,7 +328,7 @@ public class MainActivity extends AppCompatActivity{
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    button.setText("Re-start");
+                    button.setText("Running");
                     button.setEnabled(false);
                     new Thread(new Runnable() {
                         public void run() {
@@ -354,77 +358,77 @@ public class MainActivity extends AppCompatActivity{
                 return;
             }
 
-            found_resource = intent.getBooleanExtra("led_found_resource_a", false);
+            found_resource = intent.getBooleanExtra(led_a.msg_content_found, false);
             if(found_resource) {
                 msg("Message: found Arduino LED resource");
-                create_list("led_found_resource_a");
+                create_list(led_a.msg_content_found);
                 led_a.getResourceRepresentation();
                 return;
             }
 
-            found_resource = intent.getBooleanExtra("lcd_found_resource_a", false);
+            found_resource = intent.getBooleanExtra(lcd_a.msg_content_found, false);
             if(found_resource) {
                 msg("Message: found Arduino LCD resource");
-                create_list("lcd_found_resource_a");
+                create_list(lcd_a.msg_content_found);
                 lcd_a.getResourceRepresentation();
                 return;
             }
 
-            found_resource = intent.getBooleanExtra("buzzer_found_resource_a", false);
+            found_resource = intent.getBooleanExtra(buzzer_a.msg_content_found, false);
             if(found_resource) {
                 msg("Message: found Arduino buzzer resource");
-                create_list("buzzer_found_resource_a");
+                create_list(buzzer_a.msg_content_found);
                 buzzer_a.getResourceRepresentation();
                 return;
             }
 
-            found_resource = intent.getBooleanExtra("button_found_resource_a", false);
+            found_resource = intent.getBooleanExtra(button_a.msg_content_found, false);
             if(found_resource) {
                 msg("Message: found Arduino button resource");
-                create_list("button_found_resource_a");
+                create_list(button_a.msg_content_found);
                 //button_a.getResourceRepresentation();
                 button_a.observeFoundResource();
                 return;
             }
 
 
-            found_resource = intent.getBooleanExtra("sensor_found_resource_p", false);
+            found_resource = intent.getBooleanExtra(sensor_p.msg_content_found, false);
             if(found_resource) {
                 msg("Message: found RaspberryPi2 sensor resource");
-                create_list("sensor_found_resource_p");
+                create_list(sensor_p.msg_content_found);
                 //sensor_p.getResourceRepresentation();
                 sensor_p.start_update_thread();
                 return;
             }
 
-            found_resource = intent.getBooleanExtra("led_found_resource_p", false);
+            found_resource = intent.getBooleanExtra(led_p.msg_content_found, false);
             if(found_resource) {
                 msg("Message: found RaspberryPi2 LED resource");
-                create_list("led_found_resource_p");
+                create_list(led_p.msg_content_found);
                 led_p.getResourceRepresentation();
                 return;
             }
 
-            found_resource = intent.getBooleanExtra("lcd_found_resource_p", false);
+            found_resource = intent.getBooleanExtra(lcd_p.msg_content_found, false);
             if(found_resource) {
                 msg("Message: found RaspberryPi2 LCD resource");
-                create_list("lcd_found_resource_p");
+                create_list(lcd_p.msg_content_found);
                 lcd_p.getResourceRepresentation();
                 return;
             }
 
-            found_resource = intent.getBooleanExtra("buzzer_found_resource_p", false);
+            found_resource = intent.getBooleanExtra(buzzer_p.msg_content_found, false);
             if(found_resource) {
                 msg("Message: found RaspberryPi2 buzzer resource");
-                create_list("buzzer_found_resource_p");
+                create_list(buzzer_p.msg_content_found);
                 buzzer_p.getResourceRepresentation();
                 return;
             }
 
-            found_resource = intent.getBooleanExtra("button_found_resource_p", false);
+            found_resource = intent.getBooleanExtra(button_p.msg_content_found, false);
             if(found_resource) {
                 msg("Message: found RaspberryPi2 button resource");
-                create_list("button_found_resource_p");
+                create_list(button_p.msg_content_found);
                 //button_p.getResourceRepresentation();
                 button_p.observeFoundResource();
                 return;
@@ -436,9 +440,9 @@ public class MainActivity extends AppCompatActivity{
         @Override
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
-            int progress = intent.getIntExtra("progress", 0);
+            int progress = intent.getIntExtra(LedControl.msg_content_set, 0);
             msg("LED status: " + String.valueOf(progress));
-            led_a.putResourceRepresentation(progress);
+            led_a.putRep(progress);
         }
     };
 
@@ -446,14 +450,14 @@ public class MainActivity extends AppCompatActivity{
         @Override
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
-            int r = intent.getIntExtra("red", 0);
-            int g = intent.getIntExtra("green", 0);
-            int b = intent.getIntExtra("blue", 0);
+            int r = intent.getIntExtra(LedControlP.msg_content_set_red, 0);
+            int g = intent.getIntExtra(LedControlP.msg_content_set_red, 0);
+            int b = intent.getIntExtra(LedControlP.msg_content_set_red, 0);
             msg("LED status: ");
             msg("Red: " + String.valueOf(r));
             msg("Green: " + String.valueOf(g));
             msg("Blue: " + String.valueOf(b));
-            led_p.putResourceRepresentation(r, g, b);
+            led_p.putRep(r, g, b);
         }
     };
 
@@ -461,9 +465,9 @@ public class MainActivity extends AppCompatActivity{
         @Override
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
-            String str = intent.getStringExtra("string");
+            String str = intent.getStringExtra(LcdControl.msg_content_set);
             msg("LCD string: " + str);
-            lcd_a.putResourceRepresentation(str);
+            lcd_a.putRep(str);
         }
     };
 
@@ -471,9 +475,9 @@ public class MainActivity extends AppCompatActivity{
         @Override
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
-            String str = intent.getStringExtra("string");
+            String str = intent.getStringExtra(LcdControl.msg_content_set);
             msg("LCD string: " + str);
-            lcd_p.putResourceRepresentation(str);
+            lcd_p.putRep(str);
         }
     };
 
@@ -481,9 +485,9 @@ public class MainActivity extends AppCompatActivity{
         @Override
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
-            int tone = intent.getIntExtra("tone", 0);
+            int tone = intent.getIntExtra(BuzzerControl.msg_content_set, 0);
             msg("Buzzer tone: " + String.valueOf(tone));
-            buzzer_a.putResourceRepresentation(tone);
+            buzzer_a.putRep(tone);
         }
     };
 
@@ -491,9 +495,9 @@ public class MainActivity extends AppCompatActivity{
         @Override
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
-            double beep = intent.getDoubleExtra("beep", 0);
+            double beep = intent.getDoubleExtra(BuzzerControlP.msg_content_set, 0);
             msg("Buzzer beep: " + String.valueOf(beep));
-            buzzer_p.putResourceRepresentation(beep);
+            buzzer_p.putRep(beep);
         }
     };
 
@@ -507,11 +511,6 @@ public class MainActivity extends AppCompatActivity{
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mLcdPControlReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mBuzzerAControlReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mBuzzerPControlReceiver);
-
-        if(sensor_a != null)
-            sensor_a.stop_update_thread();
-        if(sensor_p != null)
-            sensor_p.stop_update_thread();
 
         resetGlobals();
 

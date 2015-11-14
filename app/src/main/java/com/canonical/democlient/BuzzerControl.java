@@ -21,17 +21,25 @@ public class BuzzerControl extends Dialog implements
         android.view.View.OnClickListener {
 
     private Activity c;
-    private Button buzzer_ok, buzzer_cancel;
+    private Button button_set, button_cancel;
 
     private int tone;
-    private String msg_type_done;
     private boolean put_done = true;
 
-    public BuzzerControl(Activity a, String msg_type) {
+    private String msg_type_set;
+    public final static String msg_content_set = "tone";
+
+    private String msg_type_put_done;
+    private String msg_content_put_done;
+
+
+    public BuzzerControl(Activity a, String type_set, String type_done, String content_done) {
         super(a);
         // TODO Auto-generated constructor stub
         this.c = a;
-        msg_type_done = msg_type;
+        msg_type_set = type_set;
+        msg_type_put_done = type_done;
+        msg_content_put_done = content_done;
     }
 
     @Override
@@ -40,19 +48,19 @@ public class BuzzerControl extends Dialog implements
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.buzzer_control);
 
-        Spinner spinner = (Spinner) findViewById(R.id.spinner_buzzer);
+        Spinner spinner = (Spinner) findViewById(R.id.spinner_buzzer_a);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this.c,
-                R.array.buzzer_tone_array, android.R.layout.simple_spinner_item);
+                R.array.buzzer_a_tone_array, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
 
-        buzzer_ok = (Button) findViewById(R.id.button_buzzer_ok);
-        buzzer_ok.setOnClickListener(this);
-        buzzer_cancel = (Button) findViewById(R.id.button_buzzer_cancel);
-        buzzer_cancel.setOnClickListener(this);
+        button_set = (Button) findViewById(R.id.button_buzzer_a_set);
+        button_set.setOnClickListener(this);
+        button_cancel = (Button) findViewById(R.id.button_buzzer_a_cancel);
+        button_cancel.setOnClickListener(this);
 
         LocalBroadcastManager.getInstance(this.c).registerReceiver(mBuzzerPutDoneReceiver,
-                new IntentFilter(msg_type_done));
+                new IntentFilter(msg_type_put_done));
 
         spinner.setOnItemSelectedListener(new Spinner.OnItemSelectedListener() {
             public void onItemSelected(AdapterView adapterView, View view, int position, long id) {
@@ -95,14 +103,13 @@ public class BuzzerControl extends Dialog implements
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.button_buzzer_ok:
+            case R.id.button_buzzer_a_set:
                 put_done = false;
-                buzzer_ok = (Button) findViewById(R.id.button_buzzer_ok);
-                buzzer_ok.setText("Putting ...");
-                buzzer_ok.setEnabled(false);
+                button_set.setText("Putting ...");
+                button_set.setEnabled(false);
                 sendMessage();
                 break;
-            case R.id.button_buzzer_cancel:
+            case R.id.button_buzzer_a_cancel:
                 dismiss();
                 break;
             default:
@@ -111,9 +118,9 @@ public class BuzzerControl extends Dialog implements
     }
 
     private void sendMessage() {
-        Intent intent = new Intent("msg_buzzer_a_tone");
+        Intent intent = new Intent(msg_type_set);
         // You can also include some extra data.
-        intent.putExtra("tone", tone);
+        intent.putExtra(msg_content_set, tone);
         LocalBroadcastManager.getInstance(this.c).sendBroadcast(intent);
     }
 
@@ -121,10 +128,10 @@ public class BuzzerControl extends Dialog implements
         @Override
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
-            put_done = intent.getBooleanExtra("put_done", false);
+            put_done = intent.getBooleanExtra(msg_content_put_done, false);
             if(put_done) {
-                buzzer_ok.setEnabled(true);
-                buzzer_ok.setText("SET");
+                button_set.setEnabled(true);
+                button_set.setText("SET");
             }
         }
     };

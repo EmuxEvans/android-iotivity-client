@@ -26,7 +26,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="off"
-        android:id="@+id/switch_led_red"
+        android:id="@+id/switch_led_p_red"
         android:layout_gravity="center_horizontal"
         android:checked="false"
         android:textSize="18dp" />
@@ -44,7 +44,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="off"
-        android:id="@+id/switch_led_green"
+        android:id="@+id/switch_led_p_green"
         android:layout_gravity="center_horizontal"
         android:checked="false"
         android:textSize="18dp" />
@@ -62,7 +62,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="off"
-        android:id="@+id/switch_led_blue"
+        android:id="@+id/switch_led_p_blue"
         android:layout_gravity="center_horizontal"
         android:checked="false"
         android:textSize="18dp" />
@@ -71,6 +71,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Back"
-        android:id="@+id/button_led_back"
+        android:id="@+id/button_led_p_back"
         android:layout_gravity="center_horizontal" />
 </LinearLayout>

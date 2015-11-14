@@ -8,6 +8,7 @@ import android.util.Log;
 import android.widget.ArrayAdapter;
 
 import org.iotivity.base.ErrorCode;
+import org.iotivity.base.ObserveType;
 import org.iotivity.base.OcConnectivityType;
 import org.iotivity.base.OcException;
 import org.iotivity.base.OcHeaderOption;
@@ -222,6 +223,18 @@ public class DemoResource implements
             Log.e(TAG, "Error occurred while invoking \"put\" API");
         }
     }
+
+    public void observeFoundResource() {
+        try {
+            // Invoke resource's "observe" API with a observe type, query parameters and
+            // OcResource.OnObserveListener event listener implementation
+            mResource.observe(ObserveType.OBSERVE, new HashMap<String, String>(), this);
+        } catch (OcException e) {
+            Log.e(TAG, e.toString());
+            Log.e(TAG, "Error occurred while invoking \"observe\" API");
+        }
+    }
+
 
 
 

@@ -22,27 +22,37 @@ public class LedControlP extends Dialog implements
         android.view.View.OnClickListener {
 
     private Activity c;
-    private Button led_back;
-    private Switch redSwitch;
-    private Switch greenSwitch;
-    private Switch blueSwitch;
+    private Button button_back;
+    private Switch switch_red;
+    private Switch switch_green;
+    private Switch switch_blue;
 
-    private int red_status;
-    private int green_status;
-    private int blue_status;
+    private int status_red;
+    private int status_green;
+    private int status_blue;
 
     private boolean put_done = true;
 
-    private String msg_type_done;
+    private String msg_type_set;
+    public final static String msg_content_set_red = "red";
+    public final static String msg_content_set_green = "green";
+    public final static String msg_content_set_blue = "blue";
 
-    public LedControlP(Activity a, String msg_type, int r, int g, int b) {
+    private String msg_type_put_done;
+    private String msg_content_put_done;
+
+    public LedControlP(Activity a, String type_set, String type_done, String content_done,
+                       int r, int g, int b) {
         super(a);
         // TODO Auto-generated constructor stub
         this.c = a;
-        red_status = r;
-        green_status = g;
-        blue_status = b;
-        msg_type_done = msg_type;
+        status_red = r;
+        status_green = g;
+        status_blue = b;
+
+        msg_type_set = type_set;
+        msg_type_put_done = type_done;
+        msg_content_put_done = content_done;
     }
 
     @Override
@@ -51,59 +61,59 @@ public class LedControlP extends Dialog implements
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.led_control_p);
 
-        redSwitch = (Switch) findViewById(R.id.switch_led_red);
-        greenSwitch = (Switch) findViewById(R.id.switch_led_green);
-        blueSwitch = (Switch) findViewById(R.id.switch_led_blue);
+        switch_red = (Switch) findViewById(R.id.switch_led_p_red);
+        switch_green = (Switch) findViewById(R.id.switch_led_p_green);
+        switch_blue = (Switch) findViewById(R.id.switch_led_p_blue);
 
-        redSwitch.setChecked(red_status != 0);
-        greenSwitch.setChecked(green_status != 0);
-        blueSwitch.setChecked(blue_status != 0);
+        switch_red.setChecked(status_red != 0);
+        switch_green.setChecked(status_green != 0);
+        switch_blue.setChecked(status_blue != 0);
 
-        redSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        switch_red.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView,
                                          boolean isChecked) {
 
                 if (isChecked) {
                     Log.e("LED Control P", "Red led on");
-                    red_status = 1;
+                    status_red = 1;
                 } else {
                     Log.e("LED Control P", "Red led off");
-                    red_status = 0;
+                    status_red = 0;
                 }
                 disable_switch();
                 sendMessage();
             }
         });
 
-        greenSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        switch_green.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView,
                                          boolean isChecked) {
 
-                if(isChecked){
+                if (isChecked) {
                     Log.e("LED Control P", "Green led on");
-                    green_status = 1;
-                }else{
+                    status_green = 1;
+                } else {
                     Log.e("LED Control P", "Green led off");
-                    green_status = 0;
+                    status_green = 0;
                 }
                 disable_switch();
                 sendMessage();
             }
         });
 
-        blueSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        switch_blue.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView,
                                          boolean isChecked) {
 
-                if(isChecked){
+                if (isChecked) {
                     Log.e("LED Control P", "Blue led on");
-                    blue_status = 1;
-                }else{
+                    status_blue = 1;
+                } else {
                     Log.e("LED Control P", "Blue led off");
-                    blue_status = 0;
+                    status_blue = 0;
                 }
                 disable_switch();
                 sendMessage();
@@ -111,17 +121,17 @@ public class LedControlP extends Dialog implements
         });
 
 
-        led_back = (Button) findViewById(R.id.button_led_back);
-        led_back.setOnClickListener(this);
+        button_back = (Button) findViewById(R.id.button_led_p_back);
+        button_back.setOnClickListener(this);
 
         LocalBroadcastManager.getInstance(this.c).registerReceiver(mLedPutDoneReceiver,
-                new IntentFilter(msg_type_done));
+                new IntentFilter(msg_type_put_done));
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.button_led_back:
+            case R.id.button_led_p_back:
                 dismiss();
                 break;
             default:
@@ -130,23 +140,23 @@ public class LedControlP extends Dialog implements
     }
 
     private void disable_switch() {
-        redSwitch.setEnabled(false);
-        greenSwitch.setEnabled(false);
-        blueSwitch.setEnabled(false);
+        switch_red.setEnabled(false);
+        switch_green.setEnabled(false);
+        switch_blue.setEnabled(false);
     }
 
     private void enable_switch() {
-        redSwitch.setEnabled(true);
-        greenSwitch.setEnabled(true);
-        blueSwitch.setEnabled(true);
+        switch_red.setEnabled(true);
+        switch_green.setEnabled(true);
+        switch_blue.setEnabled(true);
     }
 
     private void sendMessage() {
-        Intent intent = new Intent("msg_led_p_adjust");
+        Intent intent = new Intent(msg_type_set);
         // You can also include some extra data.
-        intent.putExtra("red", red_status);
-        intent.putExtra("green", green_status);
-        intent.putExtra("blue", blue_status);
+        intent.putExtra(msg_content_set_red, status_red);
+        intent.putExtra(msg_content_set_green, status_green);
+        intent.putExtra(msg_content_set_blue, status_blue);
         LocalBroadcastManager.getInstance(this.c).sendBroadcast(intent);
     }
 
@@ -154,7 +164,7 @@ public class LedControlP extends Dialog implements
         @Override
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
-            put_done = intent.getBooleanExtra("put_done", false);
+            put_done = intent.getBooleanExtra(msg_content_put_done, false);
             if(put_done) {
                 enable_switch();
             }

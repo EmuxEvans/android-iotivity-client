@@ -23,22 +23,28 @@ public class BuzzerControlP extends Dialog implements
         android.view.View.OnClickListener {
 
     private Activity c;
-    private Button buzzer_button;
-    private Button buzzer_button_cancel;
+    private Button button_set;
+    private Button button_cancel;
 
-    private TextView testview_seconds;
+    private TextView textview;
     private SeekBar seekBar;
     private double progress = 0;
     private boolean put_done;
 
-    private String msg_type_done;
+    private String msg_type_set;
+    public final static String msg_content_set = "second";
 
-    public BuzzerControlP(Activity a, String type) {
+    private String msg_type_put_done;
+    private String msg_content_put_done;
+
+    public BuzzerControlP(Activity a, String type_set, String type_done, String content_done) {
         super(a);
         // TODO Auto-generated constructor stub
         this.c = a;
-        msg_type_done = type;
         put_done = true;
+        msg_type_set = type_set;
+        msg_type_put_done = type_done;
+        msg_content_put_done = content_done;
     }
 
     @Override
@@ -47,20 +53,20 @@ public class BuzzerControlP extends Dialog implements
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.buzzer_control_p);
 
-        testview_seconds = (TextView) findViewById(R.id.textView_beep);
+        textview = (TextView) findViewById(R.id.textView_buzzer_p_second);
 
-        buzzer_button = (Button) findViewById(R.id.button_beep);
-        buzzer_button.setOnClickListener(this);
+        button_set = (Button) findViewById(R.id.button_buzzer_p_beep);
+        button_set.setOnClickListener(this);
 
-        buzzer_button_cancel = (Button) findViewById(R.id.button_beep_cancel);
-        buzzer_button_cancel.setOnClickListener(this);
+        button_cancel = (Button) findViewById(R.id.button_buzzer_p_cancel);
+        button_cancel.setOnClickListener(this);
 
-        seekBar = (SeekBar) findViewById(R.id.seekBar_beep);
+        seekBar = (SeekBar) findViewById(R.id.seekBar_buzzer_p_second);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progresValue, boolean fromUser) {
                 progress = (double)progresValue;
-                testview_seconds.setText(String.valueOf(progress) + " seconds");
+                textview.setText(String.valueOf(progress) + " seconds");
             }
 
             @Override
@@ -78,18 +84,18 @@ public class BuzzerControlP extends Dialog implements
         });
 
         LocalBroadcastManager.getInstance(this.c).registerReceiver(mBuzzerPutDoneReceiver,
-                new IntentFilter(msg_type_done));
+                new IntentFilter(msg_type_put_done));
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.button_beep:
-                buzzer_button.setText("Putting ...");
-                buzzer_button.setEnabled(false);
+            case R.id.button_buzzer_p_beep:
+                button_set.setText("Putting ...");
+                button_set.setEnabled(false);
                 sendMessage();
                 break;
-            case R.id.button_beep_cancel:
+            case R.id.button_buzzer_p_cancel:
                 dismiss();
                 break;
             default:
@@ -98,9 +104,9 @@ public class BuzzerControlP extends Dialog implements
     }
 
     private void sendMessage() {
-        Intent intent = new Intent("msg_buzzer_p_beep");
+        Intent intent = new Intent(msg_type_set);
         // You can also include some extra data.
-        intent.putExtra("beep", progress);
+        intent.putExtra(msg_content_set, progress);
         LocalBroadcastManager.getInstance(this.c).sendBroadcast(intent);
     }
 
@@ -108,10 +114,10 @@ public class BuzzerControlP extends Dialog implements
         @Override
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
-            put_done = intent.getBooleanExtra("put_done", false);
+            put_done = intent.getBooleanExtra(msg_type_put_done, false);
             if(put_done) {
-                buzzer_button.setEnabled(true);
-                buzzer_button.setText("SET");
+                button_set.setEnabled(true);
+                button_set.setText("SET");
             }
         }
     };

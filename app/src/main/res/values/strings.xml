@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Democlient</string>
     <string name="action_settings">Settings</string>
-    <string-array name="buzzer_tone_array">
+    <string-array name="buzzer_a_tone_array">
         <item>1915</item>
         <item>1700</item>
         <item>1519</item>

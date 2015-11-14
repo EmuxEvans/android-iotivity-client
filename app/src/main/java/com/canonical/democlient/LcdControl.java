@@ -13,19 +13,20 @@ import android.widget.EditText;
 public class LcdControl extends Dialog implements
         android.view.View.OnClickListener {
 
-    public Activity c;
-    public Dialog d;
-    public Button lcd_ok, lcd_cancel;
+    private Activity c;
+    private String msg_type_set;
 
+    private Button button_set, button_cancel;
     private EditText editText;
-    private String lcd_str;
-    private String msg_type;
+    private String str;
 
-    public LcdControl(Activity a, String type) {
+    public final static String msg_content_set = "lcd_string";
+
+    public LcdControl(Activity a, String msg_type) {
         super(a);
         // TODO Auto-generated constructor stub
         this.c = a;
-        msg_type = type;
+        msg_type_set = msg_type;
     }
 
     @Override
@@ -34,23 +35,23 @@ public class LcdControl extends Dialog implements
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.lcd_control);
 
-        lcd_str = "";
+        str = "";
 
-        lcd_ok = (Button) findViewById(R.id.button_lcd_ok);
-        lcd_ok.setOnClickListener(this);
-        lcd_cancel = (Button) findViewById(R.id.button_lcd_cancel);
-        lcd_cancel.setOnClickListener(this);
+        button_set = (Button) findViewById(R.id.button_lcd_set);
+        button_set.setOnClickListener(this);
+        button_cancel = (Button) findViewById(R.id.button_lcd_cancel);
+        button_cancel.setOnClickListener(this);
 
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.button_lcd_ok:
-                editText = (EditText) findViewById(R.id.editTextLcd);
+            case R.id.button_lcd_set:
+                editText = (EditText) findViewById(R.id.editText_lcd);
                 String temp = editText.getText().toString();
                 if(!temp.isEmpty())
-                    lcd_str = temp;
+                    str = temp;
 
                 sendMessage();
                 dismiss();
@@ -64,9 +65,9 @@ public class LcdControl extends Dialog implements
     }
 
     private void sendMessage() {
-        Intent intent = new Intent(msg_type);
+        Intent intent = new Intent(msg_type_set);
         // You can also include some extra data.
-        intent.putExtra("string", lcd_str);
+        intent.putExtra(msg_content_set, str);
         LocalBroadcastManager.getInstance(this.c).sendBroadcast(intent);
     }
 }
