@@ -65,6 +65,8 @@ public class DemoResource implements
 
     public String msg_type_set = "";
 
+    public String server_addr = "";
+
     public DemoResource() {}
 
     public DemoResource(Activity main, Context c, ArrayList<String> list_item,
@@ -300,6 +302,7 @@ public class DemoResource implements
         String hostAddress = ocResource.getHost();
         Log.e(TAG, "\tURI of the resource: " + resourceUri);
         Log.e(TAG, "\tHost address of the resource: " + hostAddress);
+        server_addr = hostAddress;
         // Get the resource types
         Log.e(TAG, "\tList of resource types: ");
         for (String resourceType : ocResource.getResourceTypes()) {

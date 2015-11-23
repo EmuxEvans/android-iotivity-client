@@ -314,6 +314,19 @@ public class MainActivity extends AppCompatActivity{
 
     }
 
+    private void show_ip(final String ipaddr) {
+        runOnUiThread(new Runnable() {
+            public synchronized void run() {
+                TextView tv = (TextView)findViewById(R.id.textView2);
+                String str = tv.getText().toString();
+                str += "\n";
+                String ip = ipaddr.replace("coap://", "");
+                str += ip;
+                tv.setText(str);
+            }
+        });
+    }
+
     private BroadcastReceiver mFoundResourceReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -384,6 +397,7 @@ public class MainActivity extends AppCompatActivity{
                 msg("Message: found RaspberryPi2 LCD resource");
                 create_list(lcd_p.msg_content_found);
                 lcd_p.getResourceRepresentation();
+                show_ip(lcd_p.server_addr);
                 return;
             }
 
