@@ -10,6 +10,8 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+
+        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -25,4 +27,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.1.0'
     compile 'com.android.support:design:23.1.0'
     compile project(':iotivity-base-x86-release')
+    compile project(':iotivity-base-armeabi-release')
+    compile project(':iotivity-base-armeabi-v7a-release')
+    compile project(':iotivity-base-x86_64-release')
 }
